@@ -2,6 +2,8 @@
 
 {{define "main"}}
 <form action='/snippet/create' method='POST'>
+    <!-- Include the CSRF token -->
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     <div>
         <label>Title:</label>
         {{with .Form.FieldErrors.title}}
@@ -11,8 +13,6 @@
     </div>
     <div>
         <label>Content:</label>
-        <!-- Likewise render the value of .Form.FieldErrors.content if it is not
-        empty. -->
         {{with .Form.FieldErrors.content}}
             <label class='error'>{{.}}</label>
         {{end}}
@@ -20,7 +20,6 @@
     </div>
     <div>
         <label>Delete in:</label>
-        <!-- And render the value of .Form.FieldErrors.expires if it is not empty. -->
         {{with .Form.FieldErrors.expires}}
             <label class='error'>{{.}}</label>
         {{end}}

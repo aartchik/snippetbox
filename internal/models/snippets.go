@@ -51,7 +51,7 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 }
 
 func (m *SnippetModel) Latest() ([]*Snippet, error) {
-	stmt := `SELECT * from snippets where expires > NOW() order by id limit 10`
+	stmt := `SELECT * from snippets where expires > NOW() order by created desc limit 10`
 
 	rows, err := m.DB.Query(stmt)
 	if err != nil {
