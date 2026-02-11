@@ -11,6 +11,8 @@ type templateData struct {
 	CurrentYear int
     Snippet *models.Snippet
 	Snippets []*models.Snippet
+	Form        any
+	Flash string 
 }
 
 func humanDate(t time.Time) string {
@@ -33,24 +35,21 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	for _, page := range pages {
 		name := filepath.Base(page)
 
+		ts, err := template.New(name).Funcs(functions).ParseFiles("/home/aartchik/project/golang/snippetbox/ui/html/base.tmpl")
+		if err != nil {
+			return nil, err
+		}
+		ts, err = ts.ParseGlob("/home/aartchik/project/golang/snippetbox/ui/html/partials/*.tmpl")
+		if err != nil {
+			return nil, err
+		}
 
-	
-	ts, err := template.New(name).Funcs(functions).ParseFiles("/home/aartchik/project/golang/snippetbox/ui/html/base.tmpl")
-	if err != nil {
-		return nil, err
-	}
+		ts, err = ts.ParseFiles(page)
+		if err != nil {
+			return nil, err
+		}
 
-	ts, err = ts.ParseGlob("/home/aartchik/project/golang/snippetbox/ui/html/partials/*.tmpl")
-        if err != nil {
-            return nil, err
-        }
-
-        ts, err = ts.ParseFiles(page)
-        if err != nil {
-            return nil, err
-        }
-
-        cache[name] = ts
+		cache[name] = ts
     }
 	return cache, nil
 }

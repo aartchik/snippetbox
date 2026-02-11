@@ -7,10 +7,15 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"snippetbox.net/internal/models"
-
+	"github.com/go-playground/form/v4"
+	"crypto/tls"
 	"log"
 	"net/http"
 	"os"
+
+	 "github.com/alexedwards/scs/mysqlstore" 
+    "github.com/alexedwards/scs/v2"    
+	"time" 
 )
 
 type config struct {
@@ -24,6 +29,8 @@ type application struct {
 	infoLog  *log.Logger
 	snippets *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func openDB(cfg *config) (*sql.DB, error) {
@@ -59,21 +66,35 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	formDecoder := form.NewDecoder()
+
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.Secure = true
+
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
 		snippets: &models.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder: formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	srv := &http.Server{
 		Addr:     cfg.addr,
 		ErrorLog: errorLog,
 		Handler:  app.routes(),
+		TLSConfig: tlsConfig,
 	}
 
 	infoLog.Printf("Starting server on %s", cfg.addr)
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("/home/aartchik/project/golang/snippetbox/tls/cert.pem", "/home/aartchik/project/golang/snippetbox/tls/key.pem")
 	errorLog.Fatal(err)
 }
 
