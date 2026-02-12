@@ -1,1 +1,12 @@
-INFO	2026/02/07 17:42:21 Starting server on :4000
+CREATE TABLE snippets (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    created DATETIME NOT NULL,
+    expires DATETIME NOT NULL,
+
+    user_id INT NOT NULL,
+
+    CONSTRAINT snippets_fk_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+);

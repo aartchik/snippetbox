@@ -50,6 +50,9 @@ func Accept_values(expires int, value... int) bool {
 }
 
 
+func SamePassword(pass1, pass2 string) (bool) {
+	return pass1 == pass2
+}
 
 func (v *Validator) CheckField(ok bool, key, message string) {
 	if !ok {

@@ -32,6 +32,58 @@ type usersLoginForm struct {
     validator.Validator`form:"-"`
 }
 
+type usersPasswordForm struct {
+    Password string `form:"curr_password"`
+    NewPassword string `form:"new_password"`
+    ConfirmNewPassword string `form:"confirm_password"`
+    validator.Validator`form:"-"`
+}
+
+
+func (app *application) passwordUpdate(w http.ResponseWriter, r *http.Request) {
+    data := app.newTemplateData(r)
+    data.Form = usersPasswordForm{}
+    app.render(w, http.StatusOK, "updatePassword.tmpl", data)
+}
+
+func (app *application) passwordUpdatePost(w http.ResponseWriter, r *http.Request) {
+    var form usersPasswordForm
+    err := app.decodePostForm(r, &form)
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+
+	form.CheckField(validator.NotBlank(form.Password), "curr_password", "This field cannot be blank")
+    form.CheckField(validator.NotBlank(form.NewPassword), "new_password", "This field cannot be blank")
+    form.CheckField(validator.NotBlank(form.ConfirmNewPassword), "confirm_password", "This field cannot be blank")
+
+    b, err := app.users.ReturnCorrectPassword(form.Password, app.sessionManager.GetInt(r.Context(), "authenticatedUserID"))
+    if err != nil {
+        if errors.Is(err, models.ErrInvalidCredentials) {
+            form.CheckField(b, "curr_password", "Password is incorrect")
+        } else {
+            app.serverError(w, err)
+        } 
+        }
+    
+    form.CheckField(validator.MaxChar(form.NewPassword, 100), "new_password", "This field cannot be more 100 characters long")
+    form.CheckField(validator.MinChar(form.NewPassword, 7), "new_password", "This field cannot be less 8 characters long")
+    form.CheckField(validator.SamePassword(form.NewPassword, form.ConfirmNewPassword), "confirm_password", "the passwords don't match")
+
+    if !form.Valid() {
+        data := app.newTemplateData(r)
+        data.Form = form
+        app.render(w, http.StatusUnprocessableEntity, "updatePassword.tmpl", data)
+        return
+    }
+    data := app.newTemplateData(r)
+    data.Form = form
+    http.Redirect(w, r, fmt.Sprintf("/account/view"), http.StatusSeeOther)
+}
+
+
 
 func (app *application) account(w http.ResponseWriter, r *http.Request) {
 
@@ -160,7 +212,13 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 
     app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
 
+    if path :=app.sessionManager.GetString(r.Context(),"RedirectPathAfterLogin"); path != "" {
+    http.Redirect(w, r, path, http.StatusSeeOther)
+
+    } else {
     http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
+    }
+
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
@@ -185,7 +243,8 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
-	res, err := app.snippets.Latest()
+    user_id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	res, err := app.snippets.Latest(user_id)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -210,8 +269,8 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
         app.notFound(w)
         return
     }
-
-    snippet, err := app.snippets.Get(id)
+    user_id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+    snippet, err := app.snippets.Get(id, user_id)
     if err != nil {
         if errors.Is(err, models.ErrNoRecord) {
             app.notFound(w)
@@ -269,8 +328,8 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
         app.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
         return
     }
-
-    res, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
+ user_id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+    res, err := app.snippets.Insert(form.Title, form.Content, form.Expires, user_id)
     if err != nil {
         app.serverError(w, err)
         return

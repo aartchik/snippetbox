@@ -43,6 +43,46 @@ func (m *UserModel) Insert(name, email, password string) error {
 }
 
 
+func (m *UserModel) ChangePassword(password string, user_id int) (error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+
+	stmt := `update users set hashed_password = ? where id = ?`
+
+	_, err = m.DB.Exec(stmt, hash, user_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *UserModel) SamePassword(new_password, confirm_password string) (bool) {
+	return new_password == confirm_password
+}
+
+func (m *UserModel) ReturnCorrectPassword(password string, user_id int) (bool, error) {
+	var hash []byte
+	stmt := `select hashed_password from users where id = ?`
+
+	err := m.DB.QueryRow(stmt, user_id).Scan(&hash)
+	if err != nil {
+		return false, err
+	}
+	err = bcrypt.CompareHashAndPassword(hash, []byte(password))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return false, ErrInvalidCredentials
+		} else {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+
+
 
 func (m *UserModel) Authenticate(email, password string) (int, error) {
 
