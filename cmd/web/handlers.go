@@ -54,19 +54,20 @@ func (app *application) passwordUpdatePost(w http.ResponseWriter, r *http.Reques
         return
     }
 
+    user_id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 
 	form.CheckField(validator.NotBlank(form.Password), "curr_password", "This field cannot be blank")
     form.CheckField(validator.NotBlank(form.NewPassword), "new_password", "This field cannot be blank")
     form.CheckField(validator.NotBlank(form.ConfirmNewPassword), "confirm_password", "This field cannot be blank")
 
-    b, err := app.users.ReturnCorrectPassword(form.Password, app.sessionManager.GetInt(r.Context(), "authenticatedUserID"))
+    b, err := app.users.ReturnCorrectPassword(form.Password, user_id)
     if err != nil {
         if errors.Is(err, models.ErrInvalidCredentials) {
             form.CheckField(b, "curr_password", "Password is incorrect")
         } else {
             app.serverError(w, err)
         } 
-        }
+    }
     
     form.CheckField(validator.MaxChar(form.NewPassword, 100), "new_password", "This field cannot be more 100 characters long")
     form.CheckField(validator.MinChar(form.NewPassword, 7), "new_password", "This field cannot be less 8 characters long")
@@ -78,8 +79,14 @@ func (app *application) passwordUpdatePost(w http.ResponseWriter, r *http.Reques
         app.render(w, http.StatusUnprocessableEntity, "updatePassword.tmpl", data)
         return
     }
+
+    err = app.users.ChangePassword(form.NewPassword, user_id)
+    if err != nil {
+        app.serverError(w, err)
+    }
     data := app.newTemplateData(r)
     data.Form = form
+    app.sessionManager.Put(r.Context(), "flash", "Change password complete success")
     http.Redirect(w, r, fmt.Sprintf("/account/view"), http.StatusSeeOther)
 }
 
@@ -216,7 +223,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
     http.Redirect(w, r, path, http.StatusSeeOther)
 
     } else {
-    http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
+    http.Redirect(w, r, "/account/view", http.StatusSeeOther)
     }
 
 }
@@ -235,6 +242,8 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
     }
 
     app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+    app.sessionManager.Remove(r.Context(), "RedirectPathAfterLogin")
+
     app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
 
     http.Redirect(w, r, "/", http.StatusSeeOther)
