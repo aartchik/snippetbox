@@ -22,6 +22,7 @@ type config struct {
 	addr      string
 	staticDir string
 	dsn       string
+	debug     bool
 }
 
 type application struct {
@@ -32,6 +33,7 @@ type application struct {
 	templateCache map[string]*template.Template
 	formDecoder   *form.Decoder
 	sessionManager *scs.SessionManager
+	debug bool
 }
 
 func openDB(cfg *config) (*sql.DB, error) {
@@ -51,6 +53,7 @@ func main() {
 	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP network address")
 	flag.StringVar(&cfg.staticDir, "static-dir", "./ui/static", "Path to static assets")
 	flag.StringVar(&cfg.dsn, "dsn", "web:pass@/snippetbox?parseTime=true", "Database connection string")
+	flag.BoolVar(&cfg.debug, "debug", false, "When running in debug mode, any detailed errors and stack traces should be displayed in the browser")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -86,6 +89,7 @@ func main() {
 		templateCache: templateCache,
 		formDecoder: formDecoder,
 		sessionManager: sessionManager,
+		debug: cfg.debug,
 	}
 
 	srv := &http.Server{

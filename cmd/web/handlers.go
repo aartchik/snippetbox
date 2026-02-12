@@ -33,6 +33,31 @@ type usersLoginForm struct {
 }
 
 
+func (app *application) account(w http.ResponseWriter, r *http.Request) {
+
+    data := app.newTemplateData(r)
+    id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+    var err error
+    data.Form, err = app.users.ReturnData(id)
+    if err != nil {
+        if errors.Is(err, models.ErrNoRecord) {
+            app.notFound(w)
+        } else {
+            app.serverError(w, err)
+        }
+        return
+    }
+    app.render(w, http.StatusOK, "account.tmpl", data)
+
+}
+
+
+func (app *application) about(w http.ResponseWriter, r *http.Request) {
+    data := app.newTemplateData(r)
+    app.render(w, http.StatusOK, "about.tmpl", data)
+    
+}
+
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 
     data := app.newTemplateData(r)
@@ -255,3 +280,5 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", res), http.StatusSeeOther)
 }
+
+

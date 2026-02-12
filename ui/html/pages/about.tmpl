@@ -1,0 +1,29 @@
+{{define "title"}}Home{{end}}
+
+{{define "main"}}
+<h2>About</h2>
+
+<p>
+  Snippetbox is a small web application written in Go by <a href='https://github.com/aartchik'>aartchik</a> that allows users to create, store, and manage text snippets.
+</p>
+
+<p>
+The main goal of this project is to practice tools for creating secure server-rendered web applications using real-world backend patterns: routing, middleware, sessions, authentication, form validation, CSRF protection, database integration, and HTTPS.
+</p>
+
+
+<h3>Technologies Used</h3>
+<ul>
+  <li><strong>Go (net/http)</strong> — HTTP server, handlers, and middleware</li>
+  <li><strong>html/template</strong> — server-side HTML templates</li>
+  <li><strong>MySQL</strong> — storage for users, snippets, and sessions</li>
+  <li><strong>alexedwards/scs</strong> — session management (MySQL-backed session store)</li>
+  <li><strong>justinas/nosurf</strong> — CSRF protection</li>
+  <li><strong>julienschmidt/httprouter</strong> — HTTP request routing</li>
+  <li><strong>justinas/alice</strong> — middleware chaining</li>
+</ul>
+
+{{end}}
+
+
+

@@ -11,7 +11,7 @@ import (
 )
 
 type User struct {
-	ID int
+	ID int 
 	Name string
 	Email string
 	HashedPassword []byte
@@ -76,6 +76,22 @@ func (m *UserModel) Exist(id int) (bool, error) {
 	stmt := "select exists(select true from users where id = ?)"
 	err := m.DB.QueryRow(stmt, id).Scan(&exists)
     return exists, err
+}
+
+func (m *UserModel) ReturnData(id int) (*User, error) {
+	stmt := "select name, email, created from users where id = ?"
+	row := m.DB.QueryRow(stmt, id)
+	s := &User{}
+	err := row.Scan(&s.Name, &s.Email, &s.Created)
+	if err != nil {
+		if errors.Is(sql.ErrNoRows, err) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+
+	return s, nil
 }
 
 

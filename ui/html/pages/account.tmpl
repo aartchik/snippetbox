@@ -1,0 +1,23 @@
+{{define "title"}}Home{{end}}
+
+{{define "main"}}
+    <h2>Your Account</h2>
+    {{if .Form}}
+    {{with .Form}}
+     <table>
+        <tr>
+            <td>Name</th>
+            <td>{{.Name}}</th>
+        </tr>
+        <tr>
+            <td>Email</th>
+            <td>{{.Email}}</th>
+        </tr>
+        <tr>
+            <td>Joined</th>
+            <td>{{humanDate .Created}}</th>
+        </tr>
+        {{end}}
+    </table>
+    {{end}}
+{{end}}
