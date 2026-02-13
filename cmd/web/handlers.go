@@ -39,6 +39,23 @@ type usersPasswordForm struct {
     validator.Validator`form:"-"`
 }
 
+type idSnippetForm struct {
+    ID int `form:"id"`
+}
+
+ func (app *application) deleteSnippetPost(w http.ResponseWriter, r *http.Request) {
+    var form idSnippetForm
+    err := app.decodePostForm(r, &form)
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+    app.snippets.Delete(form.ID)
+    app.sessionManager.Put(r.Context(), "flash", "Snippet delete successful")
+    http.Redirect(w, r, "/", http.StatusSeeOther)
+
+}
+
 
 func (app *application) passwordUpdate(w http.ResponseWriter, r *http.Request) {
     data := app.newTemplateData(r)
@@ -87,9 +104,8 @@ func (app *application) passwordUpdatePost(w http.ResponseWriter, r *http.Reques
     data := app.newTemplateData(r)
     data.Form = form
     app.sessionManager.Put(r.Context(), "flash", "Change password complete success")
-    http.Redirect(w, r, fmt.Sprintf("/account/view"), http.StatusSeeOther)
+    http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 }
-
 
 
 func (app *application) account(w http.ResponseWriter, r *http.Request) {
