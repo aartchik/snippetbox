@@ -74,7 +74,7 @@ func main() {
 
 	sessionManager := scs.New()
 	sessionManager.Store = mysqlstore.New(db)
-	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Lifetime = 24 * time.Hour * 7
 	sessionManager.Cookie.Secure = true
 
 	tlsConfig := &tls.Config{
@@ -100,7 +100,7 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", cfg.addr)
-	err = srv.ListenAndServeTLS("/home/aartchik/project/golang/snippetbox/tls/cert.pem", "/home/aartchik/project/golang/snippetbox/tls/key.pem")
+	err = srv.ListenAndServeTLS("tls/cert.pem", "tls/key.pem")
 	errorLog.Fatal(err)
 }
 

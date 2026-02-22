@@ -19,6 +19,16 @@ type SnippetModel struct {
 	DB *sql.DB
 }
 
+func (m *SnippetModel) Delete(snippet_id int) (error) {
+	stmt := `delete from snippets where id = ?`
+	_, err := m.DB.Exec(stmt, snippet_id)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
 func (m *SnippetModel) Insert(title string, content string, expires, user_id int) (int, error) {
 	stmt := `INSERT INTO snippets(title, content, created, expires, user_id) VALUES(?, ?, NOW(),  DATE_ADD(NOW(), INTERVAL ? DAY), ?)`
 
