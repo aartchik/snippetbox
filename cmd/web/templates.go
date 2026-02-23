@@ -1,8 +1,8 @@
 package main
 
 import (
-    "html/template" // New import
-    "path/filepath" // New import
+    "html/template" 
+    "path/filepath" 
 	"time"
     "snippetbox.net/internal/models"
 )

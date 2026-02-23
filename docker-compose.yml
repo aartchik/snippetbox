@@ -11,14 +11,35 @@ services:
       interval: 2s
       timeout: 2s
       retries: 30
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  migrate:
+    image: migrate/migrate:v4.17.1
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations:ro
+    command:
+      [
+        "-path", "/migrations",
+        "-database", "mysql://web:pass@tcp(db:3306)/snippetbox?multiStatements=true",
+        "up"
+      ]
+    restart: "no"
 
   app:
     build: .
     ports:
       - "4000:4000"
     depends_on:
-      db:
-        condition: service_healthy
-    command:
-      - ./server
-      - -dsn=web:pass@tcp(db:3306)/snippetbox?parseTime=true
+      migrate:
+        condition: service_completed_successfully
+  command:
+    - ./server
+    - -dsn=web:pass@tcp(db:3306)/snippetbox?parseTime=true
+    - -static-dir=/app/ui/static
+
+volumes:
+  dbdata:

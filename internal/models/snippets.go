@@ -49,7 +49,7 @@ func (m *SnippetModel) Get(snip_id, user_id int) (*Snippet, error) {
 
 	row := m.DB.QueryRow(stmt, snip_id, user_id)
 	s := &Snippet{}
-	err := row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id)
+	err := row.Scan(&s.ID, &s.User_id, &s.Title, &s.Content, &s.Created, &s.Expires)
 	if err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
 			return nil, ErrNoRecord
@@ -75,7 +75,7 @@ func (m *SnippetModel) Latest(user_id int) ([]*Snippet, error) {
 
 	for rows.Next() {
 		s := &Snippet{}
-		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id)
+		err = rows.Scan(&s.ID,&s.User_id, &s.Title, &s.Content, &s.Created, &s.Expires)
 		
 		if err != nil {
 			return nil, err

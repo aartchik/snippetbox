@@ -23,6 +23,7 @@ type config struct {
 	staticDir string
 	dsn       string
 	debug     bool
+	tls	      bool
 }
 
 type application struct {
@@ -51,9 +52,10 @@ func main() {
 	var cfg config
 
 	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP network address")
-	flag.StringVar(&cfg.staticDir, "static-dir", "./ui/static", "Path to static assets")
+	flag.StringVar(&cfg.staticDir, "static-dir", "ui/static", "Path to static assets")
 	flag.StringVar(&cfg.dsn, "dsn", "web:pass@/snippetbox?parseTime=true", "Database connection string")
 	flag.BoolVar(&cfg.debug, "debug", false, "When running in debug mode, any detailed errors and stack traces should be displayed in the browser")
+	flag.BoolVar(&cfg.tls, "tls", false, "Enable HTTPS")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -100,7 +102,11 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", cfg.addr)
-	err = srv.ListenAndServeTLS("tls/cert.pem", "tls/key.pem")
+	if cfg.tls {
+		err = srv.ListenAndServeTLS("tls/cert.pem", "tls/key.pem")
+	} else {
+		err = srv.ListenAndServe()
+	}
 	errorLog.Fatal(err)
 }
 
