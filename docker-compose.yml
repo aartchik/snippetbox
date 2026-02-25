@@ -36,10 +36,10 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-  command:
-    - ./server
-    - -dsn=web:pass@tcp(db:3306)/snippetbox?parseTime=true
-    - -static-dir=/app/ui/static
+    command:
+      - ./server
+      - -dsn=web:pass@tcp(db:3306)/snippetbox?parseTime=true
+      - -static-dir=/app/ui/static
 
 volumes:
   dbdata:
