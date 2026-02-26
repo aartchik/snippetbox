@@ -244,6 +244,10 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 
     if  !app.IsAuthenticated(r) {
@@ -282,9 +286,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "home.tmpl", data)
 }
 
-func (app *application) ping(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("pong"))
-}
+
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
     params := httprouter.ParamsFromContext(r.Context())
