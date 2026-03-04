@@ -23,13 +23,14 @@ type config struct {
 	staticDir string
 	dsn       string
 	debug     bool
+	tls	      bool
 }
 
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
-	snippets *models.SnippetModel
-	users *models.UserModel
+	snippets  models.SnippetModelInterface
+	users models.UserModelInterface
 	templateCache map[string]*template.Template
 	formDecoder   *form.Decoder
 	sessionManager *scs.SessionManager
@@ -54,6 +55,7 @@ func main() {
 	flag.StringVar(&cfg.staticDir, "static-dir", "ui/static", "Path to static assets")
 	flag.StringVar(&cfg.dsn, "dsn", "web:pass@/snippetbox?parseTime=true", "Database connection string")
 	flag.BoolVar(&cfg.debug, "debug", false, "When running in debug mode, any detailed errors and stack traces should be displayed in the browser")
+	flag.BoolVar(&cfg.tls, "tls", false, "Enable HTTPS")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -75,7 +77,7 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 24 * time.Hour * 7
-	sessionManager.Cookie.Secure = true
+	sessionManager.Cookie.Secure = cfg.tls
 
 	tlsConfig := &tls.Config{
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
@@ -100,7 +102,11 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", cfg.addr)
-	err = srv.ListenAndServeTLS("tls/cert.pem", "tls/key.pem")
+	if cfg.tls {
+		err = srv.ListenAndServeTLS("tls/cert.pem", "tls/key.pem")
+	} else {
+		err = srv.ListenAndServe()
+	}
 	errorLog.Fatal(err)
 }
 
