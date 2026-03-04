@@ -29,8 +29,8 @@ type config struct {
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
-	snippets *models.SnippetModel
-	users *models.UserModel
+	snippets  models.SnippetModelInterface
+	users models.UserModelInterface
 	templateCache map[string]*template.Template
 	formDecoder   *form.Decoder
 	sessionManager *scs.SessionManager
@@ -77,7 +77,7 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 24 * time.Hour * 7
-	sessionManager.Cookie.Secure = true
+	sessionManager.Cookie.Secure = cfg.tls
 
 	tlsConfig := &tls.Config{
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},

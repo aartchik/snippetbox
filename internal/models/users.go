@@ -10,6 +10,16 @@ import (
 	"golang.org/x/crypto/bcrypt"     // New import
 )
 
+type UserModelInterface interface {
+    Insert(name, email, password string) error
+    Authenticate(email, password string) (int, error)
+    Exist(id int) (bool, error)
+	ReturnCorrectPassword(password string, user_id int) (bool, error)
+	ChangePassword(password string, user_id int) (error)
+	SamePassword(new_password, confirm_password string) (bool)
+	ReturnData(id int) (*User, error)
+}
+
 type User struct {
 	ID int 
 	Name string
@@ -80,9 +90,6 @@ func (m *UserModel) ReturnCorrectPassword(password string, user_id int) (bool, e
 	}
 	return true, nil
 }
-
-
-
 
 func (m *UserModel) Authenticate(email, password string) (int, error) {
 
