@@ -1,0 +1,36 @@
+ERROR	2026/02/07 17:42:24 handlers.go:23: open /home/aartchik/project/golang/snippetbox/ui/html/pages/home.tmpl: no such file or directory
+goroutine 8 [running]:
+runtime/debug.Stack()
+	/usr/local/go/src/runtime/debug/stack.go:26 +0x83
+main.(*application).serverError(0x90181e8, {0x854403c, 0x912c2c8}, {0x8542a60, 0x91106f0})
+	/home/aartchik/project/golang/snippetbox/cmd/web/helpers.go:10 +0x3e
+main.(*application).home(0x90181e8, {0x854403c, 0x912c2c8}, 0x912c168)
+	/home/aartchik/project/golang/snippetbox/cmd/web/handlers.go:23 +0x240
+net/http.HandlerFunc.ServeHTTP(0x9018208, {0x854403c, 0x912c2c8}, 0x912c168)
+	/usr/local/go/src/net/http/server.go:2322 +0x34
+net/http.(*ServeMux).ServeHTTP(0x911e180, {0x854403c, 0x912c2c8}, 0x912c168)
+	/usr/local/go/src/net/http/server.go:2861 +0x21c
+net/http.serverHandler.ServeHTTP({0x912c0b8}, {0x854403c, 0x912c2c8}, 0x912c168)
+	/usr/local/go/src/net/http/server.go:3340 +0x99
+net/http.(*conn).serve(0x9108300, {0x8544358, 0x9110450})
+	/usr/local/go/src/net/http/server.go:2109 +0x7a3
+created by net/http.(*Server).Serve in goroutine 1
+	/usr/local/go/src/net/http/server.go:3493 +0x419
+ERROR	2026/02/07 17:45:14 handlers.go:23: open /home/aartchik/project/golang/snippetbox/ui/html/pages/home.tmpl: no such file or directory
+goroutine 10 [running]:
+runtime/debug.Stack()
+	/usr/local/go/src/runtime/debug/stack.go:26 +0x83
+main.(*application).serverError(0x90181e8, {0x854403c, 0x912c638}, {0x8542a60, 0x9110930})
+	/home/aartchik/project/golang/snippetbox/cmd/web/helpers.go:10 +0x3e
+main.(*application).home(0x90181e8, {0x854403c, 0x912c638}, 0x912c4d8)
+	/home/aartchik/project/golang/snippetbox/cmd/web/handlers.go:23 +0x240
+net/http.HandlerFunc.ServeHTTP(0x9018208, {0x854403c, 0x912c638}, 0x912c4d8)
+	/usr/local/go/src/net/http/server.go:2322 +0x34
+net/http.(*ServeMux).ServeHTTP(0x911e180, {0x854403c, 0x912c638}, 0x912c4d8)
+	/usr/local/go/src/net/http/server.go:2861 +0x21c
+net/http.serverHandler.ServeHTTP({0x912c0b8}, {0x854403c, 0x912c638}, 0x912c4d8)
+	/usr/local/go/src/net/http/server.go:3340 +0x99
+net/http.(*conn).serve(0x9108360, {0x8544358, 0x9110450})
+	/usr/local/go/src/net/http/server.go:2109 +0x7a3
+created by net/http.(*Server).Serve in goroutine 1
+	/usr/local/go/src/net/http/server.go:3493 +0x419

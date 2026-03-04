@@ -1,2 +1,7 @@
+# Environment variables
 .env
-.idea
+
+# JetBrains IDE
+.idea/
+
+.tmp/
