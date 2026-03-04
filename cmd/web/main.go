@@ -55,7 +55,7 @@ func main() {
 	flag.StringVar(&cfg.staticDir, "static-dir", "ui/static", "Path to static assets")
 	flag.StringVar(&cfg.dsn, "dsn", "web:pass@/snippetbox?parseTime=true", "Database connection string")
 	flag.BoolVar(&cfg.debug, "debug", false, "When running in debug mode, any detailed errors and stack traces should be displayed in the browser")
-	flag.BoolVar(&cfg.tls, "tls", false, "Enable HTTPS")
+	flag.BoolVar(&cfg.tls, "tls", true, "Enable HTTPS")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)

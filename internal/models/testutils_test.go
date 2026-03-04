@@ -7,7 +7,9 @@ import (
 )
 
 func newTestDB(t *testing.T) *sql.DB {
-    db, err := sql.Open("mysql", "test_web:pass@/test_snippetbox?parseTime=true&multiStatements=true")
+    db, err := sql.Open("mysql",
+  "test_web:pass@/test_snippetbox?parseTime=true&multiStatements=true&time_zone=%27%2B00%3A00%27",
+)
     if err != nil {
         t.Fatal(err)
     }
