@@ -6,7 +6,7 @@ import (
     "snippetbox.net/internal/assert"
 )
 
-func TestUserModelExists(t *testing.T) {
+func TestSnippetModelInsert(t *testing.T) {
     // Set up a suite of table-driven tests and expected results.
     tests := []struct {
         name   string
@@ -45,7 +45,7 @@ func TestUserModelExists(t *testing.T) {
 }
 
 
-func TestUserModelDelete(t *testing.T) {
+func TestSnippetModelDelete(t *testing.T) {
     tests := []struct {
         name   string
         userID int

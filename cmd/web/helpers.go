@@ -42,10 +42,14 @@ func (app *application) serverError(w http.ResponseWriter, err error) {
 }
 
 func (app *application) clientError(w http.ResponseWriter, status int) {
+	trace := fmt.Sprintf("%s", debug.Stack())
+	app.errorLog.Output(2, trace)
 	http.Error(w, http.StatusText(status), status)
 }
 
 func (app *application) notFound(w http.ResponseWriter) {
+	trace := fmt.Sprintf("%s", debug.Stack())
+	app.errorLog.Output(2, trace)
 	app.clientError(w, http.StatusNotFound)
 }
 

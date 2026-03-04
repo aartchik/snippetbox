@@ -38,3 +38,6 @@ func (m *SnippetModel) Latest(user_id int) ([]*models.Snippet, error) {
 func (m *SnippetModel) Delete(snippet_id int) (error) {
     return nil
 }
+func (m *SnippetModel) Update(title string, content string, expires, snippet_id int) (error) {
+    return nil
+}

@@ -11,6 +11,7 @@ type SnippetModelInterface interface {
     Get(snip_id, user_id int) (*Snippet, error)
     Latest(user_id int) ([]*Snippet, error)
 	Delete(snippet_id int) (error)
+	Update(title string, content string, expires, snippet_id int) (error)
 }
 
 type Snippet struct {
@@ -48,7 +49,7 @@ func (m *SnippetModel) Get(snip_id, user_id int) (*Snippet, error) {
 
 	row := m.DB.QueryRow(stmt, snip_id, user_id)
 	s := &Snippet{}
-	err := row.Scan(&s.ID, &s.User_id, &s.Title, &s.Content, &s.Created, &s.Expires)
+	err := row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id)
 	if err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
 			return nil, ErrNoRecord
@@ -74,7 +75,7 @@ func (m *SnippetModel) Latest(user_id int) ([]*Snippet, error) {
 
 	for rows.Next() {
 		s := &Snippet{}
-		err = rows.Scan(&s.ID,&s.User_id, &s.Title, &s.Content, &s.Created, &s.Expires)
+		err = rows.Scan(&s.ID,&s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id)
 		
 		if err != nil {
 			return nil, err
@@ -95,4 +96,14 @@ func (m *SnippetModel) Delete(snippet_id int) (error) {
 		return err
 	}
 	return nil
+}
+
+func (m *SnippetModel) Update(title string, content string, expires, snippet_id int) (error) {
+	stmt := `update snippets set title = ?, content = ?, expires = DATE_ADD(NOW(), INTERVAL ? DAY)  where id = ?`
+	_, err := m.DB.Exec(stmt, title, content, expires, snippet_id)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }
