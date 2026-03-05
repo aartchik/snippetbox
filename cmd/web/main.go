@@ -1,21 +1,26 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"flag"
 	"html/template"
 
-	_ "github.com/go-sql-driver/mysql"
-	"snippetbox.net/internal/models"
-	"github.com/go-playground/form/v4"
+	"github.com/redis/go-redis/v9"
+
 	"crypto/tls"
 	"log"
 	"net/http"
 	"os"
 
-	 "github.com/alexedwards/scs/mysqlstore" 
-    "github.com/alexedwards/scs/v2"    
-	"time" 
+	"github.com/go-playground/form/v4"
+	_ "github.com/go-sql-driver/mysql"
+	"snippetbox.net/internal/models"
+
+	"time"
+
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 )
 
 type config struct {
@@ -24,6 +29,9 @@ type config struct {
 	dsn       string
 	debug     bool
 	tls	      bool
+	redisAddr     string
+    redisPassword string
+    redisDB       int
 }
 
 type application struct {
@@ -31,10 +39,27 @@ type application struct {
 	infoLog  *log.Logger
 	snippets  models.SnippetModelInterface
 	users models.UserModelInterface
+	cache *redis.Client
 	templateCache map[string]*template.Template
 	formDecoder   *form.Decoder
 	sessionManager *scs.SessionManager
 	debug bool
+}
+
+func openRedis(cfg *config) (*redis.Client, error) {
+	rdb := redis.NewClient(&redis.Options{  
+		Addr:     cfg.redisAddr,
+        Password: cfg.redisPassword, 
+        DB:       cfg.redisDB, 
+    })
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		return nil, err
+	}
+	return rdb, nil
 }
 
 func openDB(cfg *config) (*sql.DB, error) {
@@ -42,7 +67,9 @@ func openDB(cfg *config) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := db.Ping(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
 		return nil, err
 	}
 	return db, nil
@@ -56,6 +83,9 @@ func main() {
 	flag.StringVar(&cfg.dsn, "dsn", "web:pass@/snippetbox?parseTime=true", "Database connection string")
 	flag.BoolVar(&cfg.debug, "debug", false, "When running in debug mode, any detailed errors and stack traces should be displayed in the browser")
 	flag.BoolVar(&cfg.tls, "tls", true, "Enable HTTPS")
+	flag.StringVar(&cfg.redisAddr, "redis-addr", "localhost:6379", "Redis network address")
+	flag.StringVar(&cfg.redisPassword, "redis-password", "", "Redis password")
+	flag.IntVar(&cfg.redisDB, "redis-db", 0, "Redis DB")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -66,6 +96,12 @@ func main() {
 		errorLog.Fatal(err)
 	}
 	defer db.Close()
+
+	rdb, err := openRedis(&cfg)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	defer rdb.Close()
 
 	templateCache, err := newTemplateCache()
 	if err != nil {
@@ -86,7 +122,7 @@ func main() {
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
-		snippets: &models.SnippetModel{DB: db},
+		snippets: &models.SnippetModel{DB: db, RDB: rdb},
 		users: &models.UserModel{DB: db},
 		templateCache: templateCache,
 		formDecoder: formDecoder,

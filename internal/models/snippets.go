@@ -1,10 +1,18 @@
 package models
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"time"
-	"errors" 
+
+	"github.com/redis/go-redis/v9"
 )
+
+type envelope map[string]any
+
 
 type SnippetModelInterface interface {
     Insert(title string, content string, expires, user_id int) (int, error) 
@@ -14,18 +22,55 @@ type SnippetModelInterface interface {
 	Update(title string, content string, expires, snippet_id int) (error)
 }
 
+type SnippetModelCacheInterface interface {
+	GetCache(ctx context.Context, key string) (string, error)
+	SetCache(ctx context.Context, key, value string, ttl time.Duration) error
+	DelCache(ctx context.Context, keys ...string) error 
+}
+
+
+
 type Snippet struct {
-	ID      int
-	Title   string
-	Content string
-	Created time.Time
-	Expires time.Time
-	User_id int
+	ID      int 	  `json:"id"`
+	Title   string    `json:"title"`
+	Content string    `json:"content"`
+	Created time.Time `json:"created"`
+	Expires time.Time `json:"expires"`
+	User_id int		  `json:"user_id"`
 }
 
 type SnippetModel struct {
 	DB *sql.DB
+	RDB *redis.Client
 }
+
+func (r *SnippetModel) GetCache(ctx context.Context, key string) (string, error) {
+	val, err := r.RDB.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return "", nil
+		}
+		return "", err
+	}
+	return val, nil
+}
+
+func (r *SnippetModel) SetCache(ctx context.Context, key, value string, ttl time.Duration) error {
+	err := r.RDB.Set(ctx, key, value, ttl).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *SnippetModel) DelCache(ctx context.Context, keys ...string) error {
+	err := r.RDB.Del(ctx, keys...).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 
 
 
@@ -45,11 +90,23 @@ func (m *SnippetModel) Insert(title string, content string, expires, user_id int
 }
 
 func (m *SnippetModel) Get(snip_id, user_id int) (*Snippet, error) {
-	stmt := `Select * from snippets where id = ? and expires > NOW() and user_id = ?`
 
+	ctx := context.Background()
+	key := fmt.Sprintf("snippet:%d", snip_id)
+
+	res, err := m.GetCache(ctx, key)
+	if res != "" { 
+		var s Snippet
+		err = json.Unmarshal([]byte(res), &s)
+		if err == nil {
+			return &s, nil
+		}
+	}
+	
+	stmt := `Select id, title, content, created, expires, user_id from snippets where id = ? and expires > NOW() and user_id = ?`
 	row := m.DB.QueryRow(stmt, snip_id, user_id)
 	s := &Snippet{}
-	err := row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id)
+	err = row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id)
 	if err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
 			return nil, ErrNoRecord
@@ -57,6 +114,11 @@ func (m *SnippetModel) Get(snip_id, user_id int) (*Snippet, error) {
 			return nil, err
 		}
 	}
+
+	js, err :=  json.Marshal(s)
+	if err == nil {
+		_ = m.SetCache(ctx, key, string(js), 15 * time.Second)
+	} 
 
 	return s, nil
 }
@@ -90,8 +152,11 @@ func (m *SnippetModel) Latest(user_id int) ([]*Snippet, error) {
 
 
 func (m *SnippetModel) Delete(snippet_id int) (error) {
+	key := fmt.Sprintf("snippet:%d", snippet_id)
+	err := m.DelCache(context.Background(), key)
+	
 	stmt := `delete from snippets where id = ?`
-	_, err := m.DB.Exec(stmt, snippet_id)
+	_, err = m.DB.Exec(stmt, snippet_id)
 	if err != nil {
 		return err
 	}
@@ -99,8 +164,11 @@ func (m *SnippetModel) Delete(snippet_id int) (error) {
 }
 
 func (m *SnippetModel) Update(title string, content string, expires, snippet_id int) (error) {
+	key := fmt.Sprintf("snippet:%d", snippet_id)
+	err := m.DelCache(context.Background(), key)
+
 	stmt := `update snippets set title = ?, content = ?, expires = DATE_ADD(NOW(), INTERVAL ? DAY)  where id = ?`
-	_, err := m.DB.Exec(stmt, title, content, expires, snippet_id)
+	_, err = m.DB.Exec(stmt, title, content, expires, snippet_id)
 	if err != nil {
 		return err
 	}

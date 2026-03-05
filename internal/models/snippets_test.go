@@ -1,10 +1,12 @@
 package models
 
 import (
-    "testing"
+	"context"
+	"testing"
 
-    "snippetbox.net/internal/assert"
-    "time"
+	"time"
+
+	"snippetbox.net/internal/assert"
 )
 
 func TestSnippetModelExist(t *testing.T) {
@@ -86,5 +88,42 @@ func TestSnippetModelDelete(t *testing.T) {
     err = result.Scan(&cnt_new)
 
     assert.Equal(t, cnt_new, cnt)
+}
+
+func TestSnippetModelCacheSet(t *testing.T) {
+
+    rdb := newTestRedis(t)
+    r := SnippetModel{RDB: rdb}
+    ctx := context.Background()
+
+    res, err := r.GetCache(ctx, "missing")
+    assert.Equal(t, res, "")
+
+
+    err = r.SetCache(ctx, "testSET", "correctSET", 1 * time.Minute)
+    assert.NilError(t, err)
+    res, err = r.GetCache(ctx, "testSET")
+    assert.NilError(t, err)
+    assert.Equal(t, res, "correctSET")
+
+    err = r.SetCache(ctx, "testSET&TTL", "correctSET&TTL", 100 * time.Millisecond)
+    assert.NilError(t, err)
+    res, err = r.GetCache(ctx, "testSET&TTL")
+    assert.NilError(t, err)
+    assert.Equal(t, res, "correctSET&TTL")
+    time.Sleep(200 * time.Millisecond)
+    res, err = r.GetCache(ctx, "testSET&TTL")
+    assert.NilError(t ,err)
+    assert.Equal(t, res, "")
+
+    err = r.DelCache(ctx, "testSET")
+    assert.NilError(t, err)
+
+    res, err = r.GetCache(ctx, "testSET")
+    assert.NilError(t, err)
+    assert.Equal(t, res, "")
+
+    err = r.DelCache(ctx, "testNULLdel")
+    assert.NilError(t, err)
 
 }

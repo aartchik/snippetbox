@@ -1,9 +1,13 @@
 package models
 
 import (
-    "database/sql"
-    "os"
-    "testing"
+	"database/sql"
+	"os"
+	"testing"
+    "context"
+    "time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 func newTestDB(t *testing.T) *sql.DB {
@@ -37,4 +41,21 @@ func newTestDB(t *testing.T) *sql.DB {
     })
 
     return db
+}
+
+func newTestRedis(t *testing.T) *redis.Client {
+    rdb := redis.NewClient(&redis.Options{
+        Addr: "localhost:6379",
+        DB: 1,
+    })
+    ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		t.Fatal(err)
+	}
+    t.Cleanup(func() {
+        rdb.Close()
+    })
+    return rdb
 }
