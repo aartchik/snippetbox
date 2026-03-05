@@ -10,9 +10,9 @@ import (
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
-	fileServer := http.FileServer(http.Dir("/home/aartchik/project/golang/snippetbox/ui/static"))
+	fileServer := http.FileServer(http.Dir(app.staticDir))
 	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
-
+	
 	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         app.notFound(w)
     })

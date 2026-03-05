@@ -44,6 +44,7 @@ type application struct {
 	formDecoder   *form.Decoder
 	sessionManager *scs.SessionManager
 	debug bool
+	staticDir string
 }
 
 func openRedis(cfg *config) (*redis.Client, error) {
@@ -128,6 +129,7 @@ func main() {
 		formDecoder: formDecoder,
 		sessionManager: sessionManager,
 		debug: cfg.debug,
+		staticDir: cfg.staticDir,
 	}
 
 	srv := &http.Server{
