@@ -15,12 +15,12 @@
         </div>
     </div>
     <div class='metadata'>
+            <a class="button" href="/snippet/update/{{.ID}}">Edit</a>
         <form action='/snippet/delete' method='POST'>
             <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
             <input type='hidden' name='id' value='{{.ID}}'>
             <input type='submit' value="Delete">
         </form>
-            <a class="button" href="/snippet/update/{{.ID}}">Edit</a>
     </div>
 
     {{end}}

@@ -49,7 +49,8 @@ func TestSnippetModelExist(t *testing.T) {
 
 func TestSnippetModelUpdate(t *testing.T) {
 	db := newTestDB(t)
-	m := SnippetModel{DB: db}
+    rdb := newTestRedis(t)
+    m := SnippetModel{DB: db, RDB: rdb}
 
 	id, err := m.Insert("old title", "old content", 7, 1)
 	assert.NilError(t, err)
@@ -71,7 +72,8 @@ func TestSnippetModelUpdate(t *testing.T) {
 
 func TestSnippetModelDelete(t *testing.T) {
     db := newTestDB(t)
-    m := SnippetModel{DB: db}
+    rdb := newTestRedis(t)
+    m := SnippetModel{DB: db, RDB: rdb}
     var cnt, cnt_new int
 
     result := m.DB.QueryRow("select count(*) from snippets")
@@ -125,5 +127,10 @@ func TestSnippetModelCacheSet(t *testing.T) {
 
     err = r.DelCache(ctx, "testNULLdel")
     assert.NilError(t, err)
+
+
+    err = r.SetCache(ctx, "testSEflash", "correctSET", 1 * time.Minute)
+
+
 
 }

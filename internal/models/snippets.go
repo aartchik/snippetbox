@@ -11,7 +11,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type envelope map[string]any
 
 
 type SnippetModelInterface interface {

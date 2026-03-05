@@ -17,8 +17,8 @@ CREATE TABLE snippets (
     title VARCHAR(100) NOT NULL,
     content TEXT NOT NULL,
     created DATETIME NOT NULL,
-    expires DATETIME NOT NULL
-	user_id int not null,
+    expires DATETIME NOT NULL,
+	user_id int not null
 );
 
 create index snippets_created_idx on snippets (created);

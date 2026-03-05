@@ -7,12 +7,24 @@ services:
       MYSQL_USER: web
       MYSQL_PASSWORD: pass
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 2s
+      timeout: 2s
+      retries: 60
+      start_period: 10s
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"] 
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 2s
       timeout: 2s
       retries: 30
-    volumes:
-      - dbdata:/var/lib/mysql
 
   migrate:
     image: migrate/migrate:v4.17.1
@@ -36,10 +48,16 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     command:
       - ./server
       - -dsn=web:pass@tcp(db:3306)/snippetbox?parseTime=true
       - -static-dir=/app/ui/static
+      - -redis-addr=redis:6379
+      - -redis-password=
+      - -redis-db=0
 
 volumes:
   dbdata:
+  redisdata:

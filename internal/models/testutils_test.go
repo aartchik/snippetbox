@@ -56,6 +56,7 @@ func newTestRedis(t *testing.T) *redis.Client {
 	}
     t.Cleanup(func() {
         rdb.Close()
+        rdb.FlushAll(ctx)
     })
     return rdb
 }

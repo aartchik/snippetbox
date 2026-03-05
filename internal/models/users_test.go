@@ -7,7 +7,7 @@ import (
 )
 
 func TestUserModelExists(t *testing.T) {
-    // Set up a suite of table-driven tests and expected results.
+ 
     tests := []struct {
         name   string
         userID int
