@@ -1,10 +1,8 @@
 {{define "title"}}Home{{end}}
 
 {{define "main"}}
-    <h2>Latest Snippets</h2>
-    {{if .IsAuthenticated}}
-    {{if .Snippets}}
-    <div class="searchbar">
+    <h2>Found Snippets</h2>
+        <div class="searchbar">
   <form class="searchbar__form" action="/search" method="GET">
     <img class="searchbar__icon" src="/static/img/open1.png" alt="search">
     <input
@@ -13,12 +11,21 @@
       name="q"
       placeholder="Search snippets"
       autocomplete="off"
+      value='{{.Query}}'
     />
   </form>
 
-    </div>
-{{end}}
-    
+  <div class="searchbar__actions">
+    <button class="searchbar__btn" type="button" title="Sort" aria-label="Sort">
+      ⇅
+    </button>
+
+    <button class="searchbar__btn searchbar__btn--badge" type="button" title="Filter" aria-label="Filter">
+      ⚲
+      <span class="searchbar__dot" aria-hidden="true"></span>
+    </button>
+  </div>
+</div>
         {{if .Snippets}}
         <table>
             <tr>
@@ -37,7 +44,4 @@
         {{else}}
             <p>There's nothing to see here... yet!</p>
         {{end}}
-    {{else}}
-        <p><a href='/user/signup'>Signup</a> or <a href='/user/login'>login</a> to create your first snippet!</p>
-    {{end}}
 {{end}}

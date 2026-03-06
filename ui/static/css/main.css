@@ -231,7 +231,31 @@ button:hover {
     border-top: 1px solid #E4E5E7;
     border-bottom: 1px solid #E4E5E7;
 }
+.searchbar__input {
+    padding: 8px 14px;
+    border-radius: 20px;   /* делает поле круглым */
+    border: 1px solid #ccc;
+    outline: none;
+}
 
+.searchbar__icon {
+    width: 19px;
+    height: 18px;
+    margin-right: 8px;
+}
+
+.searchbar__input:focus {
+    border-color: #66afe9;
+}
+
+.searchbar {
+    margin-bottom: 24px;
+}
+.searchbar__input {
+    padding: 10px 16px;
+    border-radius: 999px;   /* максимально круглая форма */
+    border: 1px solid #ddd;
+}
 .snippet .metadata {
     background-color: #F7F9FA;
     color: #6A6C6F;

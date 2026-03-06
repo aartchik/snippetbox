@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -19,6 +20,7 @@ type SnippetModelInterface interface {
     Latest(user_id int) ([]*Snippet, error)
 	Delete(snippet_id int) (error)
 	Update(title string, content string, expires, snippet_id int) (error)
+	GetSearch(title string, user_id int) ([]*Snippet, error)
 }
 
 type SnippetModelCacheInterface interface {
@@ -173,4 +175,40 @@ func (m *SnippetModel) Update(title string, content string, expires, snippet_id 
 	}
 	return nil
 
+}
+
+
+func (m *SnippetModel) GetSearch(title string, user_id int) ([]*Snippet, error) {
+	stmt := `SELECT id, title, content, created, expires, user_id,
+			MATCH(title, content) AGAINST (? IN BOOLEAN MODE) AS score
+			FROM snippets
+			WHERE expires > NOW() AND user_id = ? AND MATCH(title, content) AGAINST (? IN BOOLEAN MODE)
+			ORDER BY score DESC, created DESC
+			LIMIT 50;`
+	
+	q := strings.TrimSpace(title)
+	q = q + "*"
+	rows, err := m.DB.Query(stmt, q, user_id, q)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	snippets := []*Snippet{}
+
+	for rows.Next() {
+		s := &Snippet{}
+		var score float64
+		err = rows.Scan(&s.ID,&s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id, &score)
+		
+		if err != nil {
+			return nil, err
+		}
+		snippets = append(snippets, s)
+	}
+	  if err = rows.Err(); err != nil {
+        return nil, err
+    }
+	return snippets, nil
 }

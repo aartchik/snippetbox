@@ -10,6 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"snippetbox.net/internal/models"
 	"snippetbox.net/internal/validator"
+    "strings"
 )
 
 type snippetCreateForm struct {
@@ -19,7 +20,7 @@ type snippetCreateForm struct {
 	validator.Validator`form:"-"`
 }
 
-type usersSugnipForm struct {
+type usersSignupForm struct {
     Name string `form:"name"`
     Email string `form:"email"`
     Password string `form:"password"`
@@ -41,6 +42,30 @@ type usersPasswordForm struct {
 
 type idSnippetForm struct {
     ID int `form:"id"`
+}
+
+
+func (app *application) searchSnippets(w http.ResponseWriter, r *http.Request) {
+
+    q := r.URL.Query().Get("q")
+    q = strings.TrimSpace(q)
+
+    if q == "" {
+        http.Redirect(w, r, "/", http.StatusSeeOther)
+        return
+    }
+
+    user_id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	res, err := app.snippets.GetSearch(q, user_id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+    app.sessionManager.Put(r.Context(), "query", q)
+	data := app.newTemplateData(r)
+	data.Snippets = res
+	app.render(w, http.StatusOK, "search.tmpl", data)
+
 }
 
 func (app *application) deleteSnippetPost(w http.ResponseWriter, r *http.Request) {
@@ -210,13 +235,13 @@ func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 
     data := app.newTemplateData(r)
 
-    data.Form = usersSugnipForm{}
+    data.Form = usersSignupForm{}
 
     app.render(w, http.StatusOK, "signup.tmpl", data)
 }
 
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-    var form usersSugnipForm
+    var form usersSignupForm
     err := app.decodePostForm(r, &form)
     if err != nil {
         app.clientError(w, http.StatusBadRequest)

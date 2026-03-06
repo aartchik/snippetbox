@@ -1,0 +1,1 @@
+drop index ft_snippets_title_content;
