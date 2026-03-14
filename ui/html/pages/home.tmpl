@@ -5,8 +5,11 @@
     {{if .IsAuthenticated}}
     {{if .Snippets}}
     <div class="searchbar">
-  <form class="searchbar__form" action="/search" method="GET">
-    <img class="searchbar__icon" src="/static/img/open1.png" alt="search">
+<form class="searchbar__form" action="/search" method="GET">
+    <button type="submit" class="searchbar__icon-btn">
+        <img class="searchbar__icon" src="/static/img/open1.png" alt="search">
+    </button>
+
     <input
       class="searchbar__input"
       type="search"
@@ -14,7 +17,7 @@
       placeholder="Search snippets"
       autocomplete="off"
     />
-  </form>
+</form>
 
     </div>
 {{end}}

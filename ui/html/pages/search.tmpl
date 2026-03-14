@@ -3,17 +3,19 @@
 {{define "main"}}
     <h2>Found Snippets</h2>
         <div class="searchbar">
-  <form class="searchbar__form" action="/search" method="GET">
-    <img class="searchbar__icon" src="/static/img/open1.png" alt="search">
+<form class="searchbar__form" action="/search" method="GET">
+    <button type="submit" class="searchbar__icon-btn">
+        <img class="searchbar__icon" src="/static/img/open1.png" alt="search">
+    </button>
+
     <input
       class="searchbar__input"
       type="search"
       name="q"
       placeholder="Search snippets"
       autocomplete="off"
-      value='{{.Query}}'
     />
-  </form>
+</form>
 
   <div class="searchbar__actions">
     <button class="searchbar__btn" type="button" title="Sort" aria-label="Sort">
