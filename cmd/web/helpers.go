@@ -1,17 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"github.com/go-playground/form/v4"
+	"github.com/justinas/nosurf"
 	"net/http"
 	"runtime/debug"
-	"bytes"
 	"time"
-	"github.com/go-playground/form/v4"
-	"errors"
-	"github.com/justinas/nosurf"
 )
-
-
 
 func (app *application) decodePostForm(r *http.Request, dst any) error {
 	err := r.ParseForm()
@@ -23,8 +21,8 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 	if err != nil {
 		var invalidDecoderError *form.InvalidDecoderError
 		if errors.As(err, &invalidDecoderError) {
-            panic(err)
-        }
+			panic(err)
+		}
 	}
 	return err
 }
@@ -37,18 +35,17 @@ func (app *application) serverError(w http.ResponseWriter, err error) {
 		return
 	}
 
-
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
 func (app *application) clientError(w http.ResponseWriter, status int) {
-	trace := fmt.Sprintf("%s", debug.Stack())
+	trace := string(debug.Stack())
 	app.errorLog.Output(2, trace)
 	http.Error(w, http.StatusText(status), status)
 }
 
 func (app *application) notFound(w http.ResponseWriter) {
-	trace := fmt.Sprintf("%s", debug.Stack())
+	trace := string(debug.Stack())
 	app.errorLog.Output(2, trace)
 	app.clientError(w, http.StatusNotFound)
 }
@@ -73,13 +70,13 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 }
 
 func (app *application) newTemplateData(r *http.Request) *templateData {
-    return &templateData{
-        CurrentYear: time.Now().Year(),
-		Flash: app.sessionManager.PopString(r.Context(), "flash"),
+	return &templateData{
+		CurrentYear:     time.Now().Year(),
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: app.IsAuthenticated(r),
 		CSRFToken:       nosurf.Token(r),
-		Query: app.sessionManager.PopString(r.Context(), "query"),
-    }
+		Query:           app.sessionManager.PopString(r.Context(), "query"),
+	}
 }
 
 func (app *application) IsAuthenticated(r *http.Request) bool {
@@ -89,5 +86,3 @@ func (app *application) IsAuthenticated(r *http.Request) bool {
 	}
 	return IsAuthenticated
 }
-
-

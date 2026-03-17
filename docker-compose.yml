@@ -1,6 +1,8 @@
 services:
   db:
     image: mysql:8
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: snippetbox
@@ -17,6 +19,8 @@ services:
 
   redis:
     image: redis:7
+    ports:
+    - "6379:6379"
     command: ["redis-server", "--appendonly", "yes"] 
     volumes:
       - redisdata:/data
@@ -58,6 +62,23 @@ services:
       - -redis-password=
       - -redis-db=0
 
+  test:
+    profiles: ["test"]
+    image: golang:1.25.6
+    working_dir: /app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    environment:
+      DSN: web:pass@tcp(db:3306)/snippetbox?parseTime=true
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: "0"
+    command: ["sh", "-c", "go mod tidy && go test ./..."]
 volumes:
   dbdata:
   redisdata:

@@ -1,0 +1,65 @@
+cmd/web/handlers.go:78:24: Error return value of `app.snippets.Delete` is not checked (errcheck)
+    app.snippets.Delete(form.ID)
+                       ^
+cmd/web/handlers.go:346:9: Error return value of `w.Write` is not checked (errcheck)
+	w.Write([]byte("OK"))
+	       ^
+cmd/web/helpers.go:34:21: Error return value of `app.errorLog.Output` is not checked (errcheck)
+	app.errorLog.Output(2, trace)
+	                   ^
+cmd/web/helpers.go:46:21: Error return value of `app.errorLog.Output` is not checked (errcheck)
+	app.errorLog.Output(2, trace)
+	                   ^
+cmd/web/helpers.go:52:21: Error return value of `app.errorLog.Output` is not checked (errcheck)
+	app.errorLog.Output(2, trace)
+	                   ^
+cmd/web/helpers.go:72:13: Error return value of `buf.WriteTo` is not checked (errcheck)
+	buf.WriteTo(w)
+	           ^
+cmd/web/main.go:99:16: Error return value of `db.Close` is not checked (errcheck)
+	defer db.Close()
+	              ^
+cmd/web/main.go:105:17: Error return value of `rdb.Close` is not checked (errcheck)
+	defer rdb.Close()
+	               ^
+cmd/web/testutils_test.go:54:24: Error return value of `rs.Body.Close` is not checked (errcheck)
+    defer rs.Body.Close()
+                       ^
+internal/models/snippets.go:135:18: Error return value of `rows.Close` is not checked (errcheck)
+	defer rows.Close()
+	                ^
+internal/models/snippets.go:196:18: Error return value of `rows.Close` is not checked (errcheck)
+	defer rows.Close()
+	                ^
+internal/models/testutils_test.go:40:17: Error return value of `db.Close` is not checked (errcheck)
+        db.Close()
+                ^
+internal/models/testutils_test.go:58:18: Error return value of `rdb.Close` is not checked (errcheck)
+        rdb.Close()
+                 ^
+internal/models/snippets.go:98:7: ineffectual assignment to err (ineffassign)
+	res, err := m.GetCache(ctx, key)
+	     ^
+internal/models/snippets.go:157:2: ineffectual assignment to err (ineffassign)
+	err := m.DelCache(context.Background(), key)
+	^
+internal/models/snippets.go:169:2: ineffectual assignment to err (ineffassign)
+	err := m.DelCache(context.Background(), key)
+	^
+internal/models/snippets.go:112:6: SA1032: arguments have the wrong order (staticcheck)
+		if errors.Is(sql.ErrNoRows, err) {
+		   ^
+internal/models/users.go:101:6: SA1032: arguments have the wrong order (staticcheck)
+		if errors.Is(sql.ErrNoRows, err) {
+		   ^
+internal/models/users.go:134:6: SA1032: arguments have the wrong order (staticcheck)
+		if errors.Is(sql.ErrNoRows, err) {
+		   ^
+cmd/web/main.go:42:2: field cache is unused (unused)
+	cache *redis.Client
+	^
+20 issues:
+* errcheck: 13
+* ineffassign: 3
+* staticcheck: 3
+* unused: 1

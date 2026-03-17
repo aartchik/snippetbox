@@ -81,7 +81,7 @@ func main() {
 
 	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP network address")
 	flag.StringVar(&cfg.staticDir, "static-dir", "ui/static", "Path to static assets")
-	flag.StringVar(&cfg.dsn, "dsn", "web:pass@/snippetbox?parseTime=true", "Database connection string")
+	flag.StringVar(&cfg.dsn, "dsn", "web:pass@tcp(localhost:3306)/snippetbox?parseTime=true", "Database connection string")
 	flag.BoolVar(&cfg.debug, "debug", false, "When running in debug mode, any detailed errors and stack traces should be displayed in the browser")
 	flag.BoolVar(&cfg.tls, "tls", true, "Enable HTTPS")
 	flag.StringVar(&cfg.redisAddr, "redis-addr", "localhost:6379", "Redis network address")
