@@ -16,7 +16,24 @@ services:
       start_period: 10s
     volumes:
       - dbdata:/var/lib/mysql
-
+  test-db:
+    profiles: ["test"]
+    image: mysql:8
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: test_snippetbox
+      MYSQL_USER: test_web
+      MYSQL_PASSWORD: pass
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 2s
+      timeout: 2s
+      retries: 60
+      start_period: 10s
+    volumes:
+      - testdbdata:/var/lib/mysql
   redis:
     image: redis:7
     ports:
@@ -67,14 +84,14 @@ services:
     image: golang:1.25.6
     working_dir: /app
     depends_on:
-      migrate:
+      test-db:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
     volumes:
       - .:/app
     environment:
-      DSN: web:pass@tcp(db:3306)/snippetbox?parseTime=true
+      DSN: test_web:pass@tcp(db:3307)/snippetbox?parseTime=true
       REDIS_ADDR: redis:6379
       REDIS_PASSWORD: ""
       REDIS_DB: "0"
@@ -82,3 +99,4 @@ services:
 volumes:
   dbdata:
   redisdata:
+  testdbdata:
