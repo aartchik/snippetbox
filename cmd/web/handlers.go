@@ -104,6 +104,7 @@ func (app *application) updateSnippet(w http.ResponseWriter, r *http.Request) {
             app.notFound(w)
         } else {
             app.serverError(w, err)
+            return
         }
         return
     }
@@ -194,6 +195,7 @@ func (app *application) passwordUpdatePost(w http.ResponseWriter, r *http.Reques
             form.CheckField(b, "curr_password", "Password is incorrect")
         } else {
             app.serverError(w, err)
+            return
         } 
     }
     
@@ -211,6 +213,7 @@ func (app *application) passwordUpdatePost(w http.ResponseWriter, r *http.Reques
     err = app.users.ChangePassword(form.NewPassword, user_id)
     if err != nil {
         app.serverError(w, err)
+        return
     }
     data := app.newTemplateData(r)
     data.Form = form
@@ -230,6 +233,7 @@ func (app *application) account(w http.ResponseWriter, r *http.Request) {
             app.notFound(w)
         } else {
             app.serverError(w, err)
+            return
         }
         return
     }
@@ -369,6 +373,7 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
     err := app.sessionManager.RenewToken(r.Context())
     if err != nil {
         app.serverError(w, err)
+        return
         
     }
 
