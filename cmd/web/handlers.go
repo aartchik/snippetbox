@@ -75,7 +75,12 @@ func (app *application) deleteSnippetPost(w http.ResponseWriter, r *http.Request
         app.clientError(w, http.StatusBadRequest)
         return
     }
-    app.snippets.Delete(form.ID)
+    user_id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+    err = app.snippets.Delete(form.ID, user_id)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
     app.sessionManager.Put(r.Context(), "flash", "Snippet delete successful")
     http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -92,7 +97,6 @@ func (app *application) updateSnippet(w http.ResponseWriter, r *http.Request) {
     }
 
     userID := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
-    app.sessionManager.Put(r.Context(), "snippetID", id)
 
     snippet, err := app.snippets.Get(id, userID)
     if err != nil {
@@ -119,8 +123,16 @@ func (app *application) updateSnippet(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) updateSnippetPost(w http.ResponseWriter, r *http.Request) {
 
+    params := httprouter.ParamsFromContext(r.Context())
+
+    snippetID, err := strconv.Atoi(params.ByName("id"))
+    if err != nil || snippetID < 1 {
+        app.notFound(w)
+        return
+    }
+
 	var form snippetCreateForm
-	err := app.decodePostForm(r, &form)
+	err = app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
@@ -143,8 +155,9 @@ func (app *application) updateSnippetPost(w http.ResponseWriter, r *http.Request
         app.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
         return
     }
-    snippetID := app.sessionManager.PopInt(r.Context(), "snippetID")
-    err = app.snippets.Update(form.Title, form.Content, form.Expires, snippetID)
+
+    user_id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+    err = app.snippets.Update(form.Title, form.Content, form.Expires, snippetID, user_id)
     if err != nil {
         app.serverError(w, err)
         return

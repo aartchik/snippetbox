@@ -55,7 +55,7 @@ func TestSnippetModelUpdate(t *testing.T) {
 	assert.NilError(t, err)
 
 	start := time.Now().UTC()
-	err = m.Update("new title", "new content", 1, id)
+	err = m.Update("new title", "new content", 1, id, 1)
 	assert.NilError(t, err)
 
 	s, err := m.Get(id, 1)
@@ -82,7 +82,7 @@ func TestSnippetModelDelete(t *testing.T) {
 	id, err := m.Insert("old title", "old content", 7, 1)
 	assert.NilError(t, err)
 
-	err = m.Delete(id)
+	err = m.Delete(id, 1)
 	assert.NilError(t, err)
 
 	result = m.DB.QueryRow("select count(*) from snippets")

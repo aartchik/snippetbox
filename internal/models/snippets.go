@@ -18,8 +18,8 @@ type SnippetModelInterface interface {
     Insert(title string, content string, expires, user_id int) (int, error) 
     Get(snip_id, user_id int) (*Snippet, error)
     Latest(user_id int) ([]*Snippet, error)
-	Delete(snippet_id int) (error)
-	Update(title string, content string, expires, snippet_id int) (error)
+	Delete(snippet_id, user_id int) (error)
+	Update(title string, content string, expires, snippet_id, user_id int) (error)
 	GetSearch(title string, user_id int) ([]*Snippet, error)
 }
 
@@ -152,27 +152,39 @@ func (m *SnippetModel) Latest(user_id int) ([]*Snippet, error) {
 }
 
 
-func (m *SnippetModel) Delete(snippet_id int) (error) {
-	key := fmt.Sprintf("snippet:%d", snippet_id)
-	err := m.DelCache(context.Background(), key)
-	
-	stmt := `delete from snippets where id = ?`
-	_, err = m.DB.Exec(stmt, snippet_id)
+func (m *SnippetModel) Delete(snippet_id, user_id int) (error) {
+	stmt := `delete from snippets where id = ? and user_id = ?`
+	result, err := m.DB.Exec(stmt, snippet_id)
 	if err != nil {
 		return err
 	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return ErrNoRecord
+	}
+
+	key := fmt.Sprintf("snippet:%d", snippet_id)
+	err = m.DelCache(context.Background(), key)
+
 	return nil
 }
 
-func (m *SnippetModel) Update(title string, content string, expires, snippet_id int) (error) {
-	key := fmt.Sprintf("snippet:%d", snippet_id)
-	err := m.DelCache(context.Background(), key)
+func (m *SnippetModel) Update(title string, content string, expires, snippet_id, user_id int) (error) {
 
-	stmt := `update snippets set title = ?, content = ?, expires = DATE_ADD(NOW(), INTERVAL ? DAY)  where id = ?`
-	_, err = m.DB.Exec(stmt, title, content, expires, snippet_id)
+
+	stmt := `update snippets set title = ?, content = ?, expires = DATE_ADD(NOW(), INTERVAL ? DAY)  where id = ? and user_id = ?`
+	_, err := m.DB.Exec(stmt, title, content, expires, snippet_id, user_id)
 	if err != nil {
 		return err
 	}
+
+	key := fmt.Sprintf("snippet:%d", snippet_id)
+	m.DelCache(context.Background(), key)
 	return nil
 
 }
