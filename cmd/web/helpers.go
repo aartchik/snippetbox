@@ -76,6 +76,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 		IsAuthenticated: app.IsAuthenticated(r),
 		CSRFToken:       nosurf.Token(r),
 		Query:           app.sessionManager.PopString(r.Context(), "query"),
+		Theme:           themeFromRequest(r),
 	}
 }
 

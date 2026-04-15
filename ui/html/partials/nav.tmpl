@@ -9,6 +9,7 @@
         <a href='/about'>About</a>
     </div>
     <div>
+        <button type='button' class='theme-toggle' data-theme-toggle aria-label='Toggle dark theme' aria-pressed='{{if eq .Theme "dark"}}true{{else}}false{{end}}'>{{if eq .Theme "dark"}}Light mode{{else}}Dark mode{{end}}</button>
         {{if .IsAuthenticated}}
             <a href='/account/view'>Account</a>
             <form action='/user/logout' method='POST'>

@@ -1,8 +1,9 @@
 package main
 
 import (
-    "html/template" 
-    "path/filepath" 
+    "html/template"
+    "net/http"
+    "path/filepath"
 	"time"
     "snippetbox.net/internal/models"
 )
@@ -16,6 +17,7 @@ type templateData struct {
 	IsAuthenticated bool
 	CSRFToken       string
 	Query string
+	Theme string
 }
 
 func humanDate(t time.Time) string {
@@ -23,6 +25,20 @@ func humanDate(t time.Time) string {
         return ""
     }
     return t.UTC().Format("02 Jan 2006 at 15:04")
+}
+
+func themeFromRequest(r *http.Request) string {
+	cookie, err := r.Cookie("theme")
+	if err != nil {
+		return "light"
+	}
+
+	switch cookie.Value {
+	case "dark", "light":
+		return cookie.Value
+	default:
+		return "light"
+	}
 }
 
 var functions = template.FuncMap{
