@@ -1,27 +1,35 @@
-{{define "title"}}Home{{end}}
+{{define "title"}}Account{{end}}
 
 {{define "main"}}
-    <h2>Your Account</h2>
+    <section class='hero hero--compact'>
+        <div>
+            <p class='eyebrow'>Account</p>
+            <h2>Your notebook profile.</h2>
+            <p class='lede'>Review identity details, check when the account was created, and keep login credentials current.</p>
+        </div>
+    </section>
     {{if .Form}}
-    {{with .Form}}
-     <table>
-        <tr>
-            <td>Name</th>
-            <td>{{.Name}}</th>
-        </tr>
-        <tr>
-            <td>Email</th>
-            <td>{{.Email}}</th>
-        </tr>
-        <tr>
-            <td>Joined</th>
-            <td>{{humanDate .Created}}</th>
-        </tr>
-        <tr>
-            <td>Password</th>
-            <td><a href='/password/update'>Change password</a></th>
-        </tr>
+        {{with .Form}}
+            <section class='panel panel--narrow'>
+                <div class='info-list'>
+                    <div class='info-list__row'>
+                        <span>Name</span>
+                        <strong>{{.Name}}</strong>
+                    </div>
+                    <div class='info-list__row'>
+                        <span>Email</span>
+                        <strong>{{.Email}}</strong>
+                    </div>
+                    <div class='info-list__row'>
+                        <span>Joined</span>
+                        <strong>{{humanDate .Created}}</strong>
+                    </div>
+                    <div class='info-list__row'>
+                        <span>Password</span>
+                        <strong><a href='/password/update'>Change password</a></strong>
+                    </div>
+                </div>
+            </section>
         {{end}}
-    </table>
     {{end}}
 {{end}}

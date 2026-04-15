@@ -1,28 +1,34 @@
 {{define "title"}}Login{{end}}
 
 {{define "main"}}
-<form action='/user/login' method='POST' novalidate>
-    <!-- Include the CSRF token -->
-    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
-    {{range .Form.NonFieldErrors}}
-        <div class='error'>{{.}}</div>
-    {{end}}
-    <div>
-        <label>Email:</label>
-        {{with .Form.FieldErrors.email}}
-            <label class='error'>{{.}}</label>
+<section class='form-shell form-shell--narrow'>
+    <div class='form-shell__intro'>
+        <p class='eyebrow'>Login</p>
+        <h2>Open your notebook.</h2>
+        <p class='lede'>Resume the archive, search old fragments, and keep editing where you left off.</p>
+    </div>
+    <form action='/user/login' method='POST' novalidate class='panel form-panel'>
+        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+        {{range .Form.NonFieldErrors}}
+            <div class='error'>{{.}}</div>
         {{end}}
-        <input type='email' name='email' value='{{.Form.Email}}'>
-    </div>
-    <div>
-        <label>Password:</label>
-        {{with .Form.FieldErrors.password}}
-            <label class='error'>{{.}}</label>
-        {{end}}
-        <input type='password' name='password'>
-    </div>
-    <div>
-        <input type='submit' value='Login'>
-    </div>
-</form>
+        <div>
+            <label>Email</label>
+            {{with .Form.FieldErrors.email}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type='email' name='email' value='{{.Form.Email}}'>
+        </div>
+        <div>
+            <label>Password</label>
+            {{with .Form.FieldErrors.password}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type='password' name='password'>
+        </div>
+        <div>
+            <input type='submit' value='Login'>
+        </div>
+    </form>
+</section>
 {{end}}

@@ -1,46 +1,68 @@
 {{define "title"}}Home{{end}}
 
 {{define "main"}}
-    <h2>Latest Snippets</h2>
-    {{if .IsAuthenticated}}
-    {{if .Snippets}}
-    <div class="searchbar">
-<form class="searchbar__form" action="/search" method="GET">
-    <button type="submit" class="searchbar__icon-btn">
-        <img class="searchbar__icon" src="/static/img/open1.png" alt="search">
-    </button>
-
-    <input
-      class="searchbar__input"
-      type="search"
-      name="q"
-      placeholder="Search snippets"
-      autocomplete="off"
-    />
-</form>
-
-    </div>
-{{end}}
-    
-        {{if .Snippets}}
-        <table>
-            <tr>
-                <th>Title</th>
-                <th>Created</th>
-                <th>ID</th>
-            </tr>
-            {{range .Snippets}}
-            <tr>
-                <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td>
-                <td>{{humanDate .Created}}</td>
-                <td>#{{.ID}}</td>
-            </tr>
+    <section class='hero'>
+        <div>
+            <p class='eyebrow'>Notebook index</p>
+            <h2>Latest snippets, kept within reach.</h2>
+            <p class='lede'>A small, server-rendered workspace for saving fragments of code, terminal notes, and half-finished ideas before they disappear.</p>
+        </div>
+        <div class='hero__aside'>
+            {{if .IsAuthenticated}}
+                <p class='hero__stat-label'>Status</p>
+                <strong>{{if .Snippets}}{{len .Snippets}}{{else}}0{{end}} active notes</strong>
+                <p class='muted-copy'>Search the archive or add a new snippet while the context is still fresh.</p>
+            {{else}}
+                <p class='hero__stat-label'>Access</p>
+                <strong>Private notebook</strong>
+                <p class='muted-copy'><a href='/user/signup'>Create an account</a> or <a href='/user/login'>sign in</a> to start collecting snippets.</p>
             {{end}}
-        </table>
+        </div>
+    </section>
+
+    {{if .IsAuthenticated}}
+        <div class='searchbar'>
+            <form class='searchbar__form' action='/search' method='GET'>
+                <button type='submit' class='searchbar__icon-btn' aria-label='Search snippets'>
+                    <img class='searchbar__icon' src='/static/img/open1.png' alt='search'>
+                </button>
+                <input class='searchbar__input' type='search' name='q' placeholder='Search snippets' autocomplete='off'>
+            </form>
+        </div>
+
+        {{if .Snippets}}
+            <section class='panel'>
+                <div class='panel__header'>
+                    <div>
+                        <p class='eyebrow'>Recent entries</p>
+                        <h3>Saved for later reuse</h3>
+                    </div>
+                </div>
+                <div class='snippet-list'>
+                    {{range .Snippets}}
+                        <article class='snippet-list__item'>
+                            <div>
+                                <p class='snippet-list__meta'>#{{.ID}} · {{humanDate .Created}}</p>
+                                <h4><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></h4>
+                            </div>
+                            <p class='snippet-list__action'><a href='/snippet/view/{{.ID}}'>Open note</a></p>
+                        </article>
+                    {{end}}
+                </div>
+            </section>
         {{else}}
-            <p>There's nothing to see here... yet!</p>
+            <section class='empty-state'>
+                <p class='eyebrow'>Quiet page</p>
+                <h3>There is nothing here yet.</h3>
+                <p>Start with a snippet you know you will need again next week.</p>
+                <a class='button' href='/snippet/create'>Write first snippet</a>
+            </section>
         {{end}}
     {{else}}
-        <p><a href='/user/signup'>Signup</a> or <a href='/user/login'>login</a> to create your first snippet!</p>
+        <section class='empty-state'>
+            <p class='eyebrow'>Private workspace</p>
+            <h3>Your snippets stay behind login.</h3>
+            <p><a href='/user/signup'>Signup</a> or <a href='/user/login'>login</a> to create your first snippet.</p>
+        </section>
     {{end}}
 {{end}}

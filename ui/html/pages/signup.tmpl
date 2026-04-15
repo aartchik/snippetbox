@@ -1,32 +1,38 @@
 {{define "title"}}Signup{{end}}
 
 {{define "main"}}
-<form action='/user/signup' method='POST' novalidate>
-    <!-- Include the CSRF token -->
-    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
-    <div>
-        <label>Name:</label>
-        {{with .Form.FieldErrors.name}}
-            <label class='error'>{{.}}</label>
-        {{end}}
-        <input type='text' name='name' value='{{.Form.Name}}'>
+<section class='form-shell form-shell--narrow'>
+    <div class='form-shell__intro'>
+        <p class='eyebrow'>Signup</p>
+        <h2>Start a personal notebook for snippets.</h2>
+        <p class='lede'>Create a small archive for code fragments, reusable commands, and details you do not want to rediscover later.</p>
     </div>
-    <div>
-        <label>Email:</label>
-        {{with .Form.FieldErrors.email}}
-            <label class='error'>{{.}}</label>
-        {{end}}
-        <input type='email' name='email' value='{{.Form.Email}}'>
-    </div>
-    <div>
-        <label>Password:</label>
-        {{with .Form.FieldErrors.password}}
-            <label class='error'>{{.}}</label>
-        {{end}}
-        <input type='password' name='password'>
-    </div>
-    <div>
-        <input type='submit' value='Signup'>
-    </div>
-</form>
+    <form action='/user/signup' method='POST' novalidate class='panel form-panel'>
+        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+        <div>
+            <label>Name</label>
+            {{with .Form.FieldErrors.name}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type='text' name='name' value='{{.Form.Name}}'>
+        </div>
+        <div>
+            <label>Email</label>
+            {{with .Form.FieldErrors.email}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type='email' name='email' value='{{.Form.Email}}'>
+        </div>
+        <div>
+            <label>Password</label>
+            {{with .Form.FieldErrors.password}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type='password' name='password'>
+        </div>
+        <div>
+            <input type='submit' value='Create account'>
+        </div>
+    </form>
+</section>
 {{end}}

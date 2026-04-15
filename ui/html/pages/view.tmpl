@@ -2,26 +2,38 @@
 
 {{define "main"}}
     {{with .Snippet}}
-    <div class='snippet'>
-        <div class='metadata'>
-            <strong>{{.Title}}</strong>
-            <span>#{{.ID}}</span>
-        </div>
-        <pre><code>{{.Content}}</code></pre>
-        <div class='metadata'>
-            <!-- Use the new template function here -->
-            <time>Created: {{humanDate .Created}}</time>
-            <time>Expires: {{humanDate .Expires}}</time>
-        </div>
-    </div>
-    <div class='metadata'>
-            <a class="button" href="/snippet/update/{{.ID}}">Edit</a>
-        <form action='/snippet/delete' method='POST'>
-            <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
-            <input type='hidden' name='id' value='{{.ID}}'>
-            <input type='submit' value="Delete">
-        </form>
-    </div>
+        <section class='hero hero--compact'>
+            <div>
+                <p class='eyebrow'>Snippet entry</p>
+                <h2>{{.Title}}</h2>
+                <p class='lede'>A saved note from the notebook archive, ready to edit, copy, or retire.</p>
+            </div>
+            <div class='hero__aside'>
+                <p class='hero__stat-label'>Record</p>
+                <strong>#{{.ID}}</strong>
+                <p class='muted-copy'>Created {{humanDate .Created}}</p>
+            </div>
+        </section>
 
+        <article class='snippet-card'>
+            <div class='snippet-card__top'>
+                <strong>{{.Title}}</strong>
+                <span>#{{.ID}}</span>
+            </div>
+            <pre><code>{{.Content}}</code></pre>
+            <div class='snippet-card__footer'>
+                <time>Created: {{humanDate .Created}}</time>
+                <time>Expires: {{humanDate .Expires}}</time>
+            </div>
+        </article>
+
+        <div class='action-row'>
+            <a class='button' href='/snippet/update/{{.ID}}'>Edit note</a>
+            <form action='/snippet/delete' method='POST'>
+                <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                <input type='hidden' name='id' value='{{.ID}}'>
+                <input class='button button--ghost' type='submit' value='Delete note'>
+            </form>
+        </div>
     {{end}}
 {{end}}

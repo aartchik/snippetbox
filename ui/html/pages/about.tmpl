@@ -1,30 +1,30 @@
-{{define "title"}}Home{{end}}
+{{define "title"}}About{{end}}
 
 {{define "main"}}
-<h2>About</h2>
+<section class='hero hero--compact'>
+    <div>
+        <p class='eyebrow'>About the notebook</p>
+        <h2>Snippetbox is a compact archive for code and context.</h2>
+        <p class='lede'>Built in Go, it focuses on the less glamorous but durable parts of web work: routing, templates, sessions, auth, validation, persistence, caching, and transport security.</p>
+    </div>
+</section>
 
-<p>
-  Snippetbox is a small web application written in Go by <a href='https://github.com/aartchik'>aartchik</a> that allows users to create, store, and manage text snippets.
-</p>
+<section class='panel prose'>
+    <p>Snippetbox is a small web application written in Go by <a href='https://github.com/aartchik'>aartchik</a> that lets users create, store, and manage text snippets.</p>
+    <p>The project is also a practical exercise in building secure server-rendered applications with real backend patterns instead of toy examples.</p>
 
-<p>
-The main goal of this project is to practice tools for creating secure server-rendered web applications using real-world backend patterns: routing, middleware, sessions, authentication, form validation, CSRF protection, database integration, and HTTPS.
-</p>
-
-
-<h3>Technologies Used</h3>
-<ul>
-  <li><strong>Go (net/http)</strong> — HTTP server, handlers, and middleware</li>
-  <li><strong>html/template</strong> — server-side HTML templates</li>
-  <li><strong>MySQL</strong> — storage for users, snippets, and sessions</li>
-  <li><strong>alexedwards/scs</strong> — session management (MySQL-backed session store)</li>
-  <li><strong>justinas/nosurf</strong> — CSRF protection</li>
-  <li><strong>julienschmidt/httprouter</strong> — HTTP request routing</li>
-  <li><strong>justinas/alice</strong> — middleware chaining</li>
-  <li><strong>redis</strong> — fast cache</li>
-</ul>
-
+    <h3>Stack</h3>
+    <ul class='tag-list'>
+        <li><strong>Go</strong> with `net/http`</li>
+        <li><strong>html/template</strong> for server rendering</li>
+        <li><strong>MySQL</strong> for users, snippets, and sessions</li>
+        <li><strong>scs</strong> for session management</li>
+        <li><strong>nosurf</strong> for CSRF protection</li>
+        <li><strong>httprouter</strong> for request routing</li>
+        <li><strong>alice</strong> for middleware composition</li>
+        <li><strong>Redis</strong> for cache reads</li>
+    </ul>
+</section>
 {{end}}
-
 
 

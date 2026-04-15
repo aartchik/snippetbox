@@ -1,34 +1,42 @@
 {{define "title"}}Create a New Snippet{{end}}
 
 {{define "main"}}
-<form action='/snippet/create' method='POST'>
-    <!-- Include the CSRF token -->
-    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
-    <div>
-        <label>Title:</label>
-        {{with .Form.FieldErrors.title}}
-            <label class='error'>{{.}}</label>
-        {{end}}
-        <input type='text' name='title' value='{{.Form.Title}}'>
+<section class='form-shell'>
+    <div class='form-shell__intro'>
+        <p class='eyebrow'>New entry</p>
+        <h2>Capture a snippet before it slips away.</h2>
+        <p class='lede'>Keep the title brief, make the body useful, and give it an expiry that matches how long it will matter.</p>
     </div>
-    <div>
-        <label>Content:</label>
-        {{with .Form.FieldErrors.content}}
-            <label class='error'>{{.}}</label>
-        {{end}}
-        <textarea name='content'>{{.Form.Content}}</textarea>
-    </div>
-    <div>
-        <label>Delete in:</label>
-        {{with .Form.FieldErrors.expires}}
-            <label class='error'>{{.}}</label>
-        {{end}}
-        <input type='radio' name='expires' value='365' {{if (eq .Form.Expires 365)}}checked{{end}}> One Year
-        <input type='radio' name='expires' value='7' {{if (eq .Form.Expires 7)}}checked{{end}}> One Week
-        <input type='radio' name='expires' value='1' {{if (eq .Form.Expires 1)}}checked{{end}}> One Day
-    </div>
-    <div>
-        <input type='submit' value='Publish snippet'>
-    </div>
-</form>
+    <form action='/snippet/create' method='POST' class='panel form-panel'>
+        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+        <div>
+            <label>Title</label>
+            {{with .Form.FieldErrors.title}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type='text' name='title' value='{{.Form.Title}}'>
+        </div>
+        <div>
+            <label>Content</label>
+            {{with .Form.FieldErrors.content}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <textarea name='content'>{{.Form.Content}}</textarea>
+        </div>
+        <div>
+            <label>Delete in</label>
+            {{with .Form.FieldErrors.expires}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <div class='radio-group'>
+                <label class='radio-option'><input type='radio' name='expires' value='365' {{if (eq .Form.Expires 365)}}checked{{end}}> <span>One year</span></label>
+                <label class='radio-option'><input type='radio' name='expires' value='7' {{if (eq .Form.Expires 7)}}checked{{end}}> <span>One week</span></label>
+                <label class='radio-option'><input type='radio' name='expires' value='1' {{if (eq .Form.Expires 1)}}checked{{end}}> <span>One day</span></label>
+            </div>
+        </div>
+        <div>
+            <input type='submit' value='Publish snippet'>
+        </div>
+    </form>
+</section>
 {{end}}
