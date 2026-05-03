@@ -2,30 +2,32 @@ package models
 
 import (
 	"database/sql"
-	"errors"  // New import
-	"strings" // New import
+	"errors"
+	"strings"
 	"time"
 
-	"github.com/go-sql-driver/mysql" // New import
-	"golang.org/x/crypto/bcrypt"     // New import
+	"github.com/go-sql-driver/mysql"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserModelInterface interface {
-    Insert(name, email, password string) error
-    Authenticate(email, password string) (int, error)
-    Exist(id int) (bool, error)
+	Insert(name, email, password string) error
+	Authenticate(email, password string) (int, error)
+	Exist(id int) (bool, error)
 	ReturnCorrectPassword(password string, user_id int) (bool, error)
-	ChangePassword(password string, user_id int) (error)
-	SamePassword(new_password, confirm_password string) (bool)
+	ChangePassword(password string, user_id int) error
+	SamePassword(new_password, confirm_password string) bool
 	ReturnData(id int) (*User, error)
+	InsertPhoto(id int, avatar_URL string) error
 }
 
 type User struct {
-	ID int 
-	Name string
-	Email string
+	ID             int
+	Name           string
+	Email          string
 	HashedPassword []byte
-	Created time.Time
+	Created        time.Time
+	AvatarURL      string
 }
 
 type UserModel struct {
@@ -37,23 +39,34 @@ func (m *UserModel) Insert(name, email, password string) error {
 	if err != nil {
 		return err
 	}
-	stmt := `INSERT into users(name, email, hashed_password, created) values (?, ?, ?, NOW())`
+	defaultPhoto := "/static/img/avatars/penguin.png"
+	stmt := `INSERT into users(name, email, hashed_password, created, avatar_url) values (?, ?, ?, NOW(), ?)`
 
-	_, err = m.DB.Exec(stmt, name, email, hash)
+	_, err = m.DB.Exec(stmt, name, email, hash, defaultPhoto)
 	if err != nil {
 		var mySQLError *mysql.MySQLError
 		if errors.As(err, &mySQLError) {
 			if mySQLError.Number == 1062 && strings.Contains(mySQLError.Message, "users_uc_email") {
-                return ErrDuplicateEmail
-            }
-        }
-        return err
-    }
-	return nil 
+				return ErrDuplicateEmail
+			}
+		}
+		return err
+	}
+	return nil
 }
 
+func (m *UserModel) InsertPhoto(id int, avatar_URL string) error {
+	stmt := "UPDATE users SET avatar_url=? WHERE id=?"
 
-func (m *UserModel) ChangePassword(password string, user_id int) (error) {
+	_, err := m.DB.Exec(stmt, avatar_URL, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *UserModel) ChangePassword(password string, user_id int) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return err
@@ -68,7 +81,7 @@ func (m *UserModel) ChangePassword(password string, user_id int) (error) {
 	return nil
 }
 
-func (m *UserModel) SamePassword(new_password, confirm_password string) (bool) {
+func (m *UserModel) SamePassword(new_password, confirm_password string) bool {
 	return new_password == confirm_password
 }
 
@@ -122,16 +135,16 @@ func (m *UserModel) Exist(id int) (bool, error) {
 
 	stmt := "select exists(select true from users where id = ?)"
 	err := m.DB.QueryRow(stmt, id).Scan(&exists)
-    return exists, err
+	return exists, err
 }
 
 func (m *UserModel) ReturnData(id int) (*User, error) {
-	stmt := "select name, email, created from users where id = ?"
+	stmt := "select name, email, created, avatar_url from users where id = ?"
 	row := m.DB.QueryRow(stmt, id)
 	s := &User{}
-	err := row.Scan(&s.Name, &s.Email, &s.Created)
+	err := row.Scan(&s.Name, &s.Email, &s.Created, &s.AvatarURL)
 	if err != nil {
-		if errors.Is(sql.ErrNoRows, err) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord
 		} else {
 			return nil, err
@@ -140,5 +153,3 @@ func (m *UserModel) ReturnData(id int) (*User, error) {
 
 	return s, nil
 }
-
-

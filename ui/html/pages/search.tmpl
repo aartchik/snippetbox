@@ -1,49 +1,48 @@
-{{define "title"}}Home{{end}}
+{{define "title"}}Search{{end}}
 
 {{define "main"}}
-    <h2>Found Snippets</h2>
-        <div class="searchbar">
-<form class="searchbar__form" action="/search" method="GET">
-    <button type="submit" class="searchbar__icon-btn">
-        <img class="searchbar__icon" src="/static/img/open1.png" alt="search">
-    </button>
+    <section class='hero hero--compact'>
+        <div>
+            <p class='eyebrow'>Search results</p>
+            <h2>Find the snippet you already wrote once.</h2>
+            <p class='lede'>Use the notebook index below to jump back into previous work without scanning the full archive by hand.</p>
+        </div>
+    </section>
 
-    <input
-      class="searchbar__input"
-      type="search"
-      name="q"
-      placeholder="Search snippets"
-      autocomplete="off"
-    />
-</form>
+    <div class='searchbar'>
+        <form class='searchbar__form' action='/search' method='GET'>
+            <button type='submit' class='searchbar__icon-btn' aria-label='Search snippets'>
+                <img class='searchbar__icon' src='/static/img/open1.png' alt='search'>
+            </button>
+            <input class='searchbar__input' type='search' name='q' value='{{.Query}}' placeholder='Search snippets' autocomplete='off'>
+        </form>
+    </div>
 
-  <div class="searchbar__actions">
-    <button class="searchbar__btn" type="button" title="Sort" aria-label="Sort">
-      ⇅
-    </button>
-
-    <button class="searchbar__btn searchbar__btn--badge" type="button" title="Filter" aria-label="Filter">
-      ⚲
-      <span class="searchbar__dot" aria-hidden="true"></span>
-    </button>
-  </div>
-</div>
-        {{if .Snippets}}
-        <table>
-            <tr>
-                <th>Title</th>
-                <th>Created</th>
-                <th>ID</th>
-            </tr>
-            {{range .Snippets}}
-            <tr>
-                <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td>
-                <td>{{humanDate .Created}}</td>
-                <td>#{{.ID}}</td>
-            </tr>
-            {{end}}
-        </table>
-        {{else}}
-            <p>There's nothing to see here... yet!</p>
-        {{end}}
+    {{if .Snippets}}
+        <section class='panel'>
+            <div class='panel__header'>
+                <div>
+                    <p class='eyebrow'>Matches</p>
+                    <h3>{{len .Snippets}} snippets found</h3>
+                </div>
+            </div>
+            <div class='snippet-list'>
+                {{range .Snippets}}
+                    <article class='snippet-list__item'>
+                        <div>
+                            <p class='snippet-list__meta'>#{{.ID}} · {{humanDate .Created}}</p>
+                            <h4><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></h4>
+                        </div>
+                        <p class='snippet-list__action'><a href='/snippet/view/{{.ID}}'>Open note</a></p>
+                    </article>
+                {{end}}
+            </div>
+        </section>
+    {{else}}
+        <section class='empty-state'>
+            <p class='eyebrow'>No matches</p>
+            <h3>Nothing surfaced for this search.</h3>
+            <p>Try a broader term or return to the notebook index.</p>
+        </section>
+    {{end}}
 {{end}}

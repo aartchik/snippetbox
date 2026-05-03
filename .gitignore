@@ -4,6 +4,8 @@
 # JetBrains IDE
 .idea/
 
+.codex
+
 tmp/
 
 snippetbox.sql
