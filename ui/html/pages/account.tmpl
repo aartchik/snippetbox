@@ -1,35 +1,67 @@
 {{define "title"}}Account{{end}}
 
 {{define "main"}}
-    <section class='hero hero--compact'>
-        <div>
-            <p class='eyebrow'>Account</p>
-            <h2>Your notebook profile.</h2>
-            <p class='lede'>Review identity details, check when the account was created, and keep login credentials current.</p>
+<section class='hero hero--compact'>
+    <div>
+        <p class='eyebrow'>Account</p>
+        <h2>Your notebook profile.</h2>
+        <p class='lede'>
+            Review identity details, check when the account was created, and keep login credentials current.
+        </p>
+    </div>
+</section>
+
+{{if .Form}}
+{{with .Form}}
+<section class='panel account-panel'>
+    <div class='account-layout'>
+        <div class='account-card account-card--details'>
+            <div class='account-card__header'>
+                <p class='account-card__eyebrow'>Profile details</p>
+                <h3 style="margin:0; font-size:1.45rem;">{{.Name}}</h3>
+            </div>
+
+            <div class='info-list__row'>
+                <span>Name</span>
+                <strong>{{.Name}}</strong>
+            </div>
+
+            <div class='info-list__row'>
+                <span>Email</span>
+                <strong>{{.Email}}</strong>
+            </div>
+
+            <div class='info-list__row'>
+                <span>Joined</span>
+                <strong>{{humanDate .Created}}</strong>
+            </div>
+
+            <div class='info-list__row'>
+                <span>Password</span>
+                <strong><a href='/password/update'>Change password</a></strong>
+            </div>
         </div>
-    </section>
-    {{if .Form}}
-        {{with .Form}}
-            <section class='panel panel--narrow'>
-                <div class='info-list'>
-                    <div class='info-list__row'>
-                        <span>Name</span>
-                        <strong>{{.Name}}</strong>
-                    </div>
-                    <div class='info-list__row'>
-                        <span>Email</span>
-                        <strong>{{.Email}}</strong>
-                    </div>
-                    <div class='info-list__row'>
-                        <span>Joined</span>
-                        <strong>{{humanDate .Created}}</strong>
-                    </div>
-                    <div class='info-list__row'>
-                        <span>Password</span>
-                        <strong><a href='/password/update'>Change password</a></strong>
-                    </div>
+
+        <aside class='account-card account-card--avatar'>
+            <p class='account-card__eyebrow account-card__eyebrow--avatar'>Avatar</p>
+            <h3 class='account-card__title'>Personal image</h3>
+
+            <div class='account-avatar-frame'>
+                <div class='account-avatar-shell'>
+                    <img class='account-avatar-image' src="{{.AvatarURL}}" alt="avatar">
                 </div>
-            </section>
-        {{end}}
-    {{end}}
+            </div>
+
+            <form action="/account/avatar" method="post" enctype="multipart/form-data" class='account-avatar-form'>
+                <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                <label class='account-avatar-form__label' for="avatar">Upload a new JPG or PNG file.</label>
+                <input class='account-avatar-form__input' id="avatar" type="file" name="avatar" accept="image/png, image/jpeg">
+                <button class='account-avatar-form__button' type="submit">Save avatar</button>
+            </form>
+        </aside>
+    </div>
+</section>
+{{end}}
+{{end}}
+
 {{end}}
