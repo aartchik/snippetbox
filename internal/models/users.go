@@ -3,8 +3,11 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
+	"math/rand"
 
 	"github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/bcrypt"
@@ -34,12 +37,32 @@ type UserModel struct {
 	DB *sql.DB
 }
 
+func  randomAvatar() (string, error) {
+	dir := "ui/static/img/avatars"
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return "/static/img/avatars/penguin.png", err
+	}
+
+	var images[] string
+
+	for _, f := range files {
+		fullPath := filepath.Join("/static/img/avatars", f.Name())
+		images = append(images, fullPath)
+	}
+	rand.Seed(time.Now().UnixNano())
+	return images[rand.Intn(len(images))], nil
+}
+
 func (m *UserModel) Insert(name, email, password string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return err
 	}
-	defaultPhoto := "/static/img/avatars/penguin.png"
+	defaultPhoto, err := randomAvatar()
+	if err != nil {
+		return err
+	}
 	stmt := `INSERT into users(name, email, hashed_password, created, avatar_url) values (?, ?, ?, NOW(), ?)`
 
 	_, err = m.DB.Exec(stmt, name, email, hash, defaultPhoto)
