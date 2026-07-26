@@ -17,7 +17,7 @@ func (app *application) routes() http.Handler {
 	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 	})
-	router.HandlerFunc(http.MethodGet, "/ping", ping)
+	router.HandlerFunc(http.MethodGet, "/ping", app.ping)
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))

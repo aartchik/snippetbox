@@ -424,8 +424,8 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func ping(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
+func (app *application) ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("ok"))
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
