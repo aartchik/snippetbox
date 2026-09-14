@@ -1,5 +1,7 @@
 # Snippetbox
 
+https://snippetbox-aartchik.duckdns.org/ - ready to go link
+
 `Snippetbox` is a small web application for storing, searching, and managing text snippets. The project is written in Go and uses server-side rendered HTML templates, MySQL for persistent storage, Redis for cache, and Docker Compose for local infrastructure.
 
 The repository is positioned as a compact production-style learning project: it has a layered structure, database migrations, session-based user flows, integration tests, and a containerized development setup. The current codebase already includes the base for user accounts and protected actions, and it is designed to grow further with more explicit authentication and authorization features.
