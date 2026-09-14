@@ -3,19 +3,13 @@
 {{define "main"}}
     <section class='hero'>
         <div>
-            <p class='eyebrow'>Notebook index</p>
-            <h2>Latest snippets, kept within reach.</h2>
-            <p class='lede'>A small, server-rendered workspace for saving fragments of code, terminal notes, and half-finished ideas before they disappear.</p>
+            <h2>Latest snippets</h2>
         </div>
         <div class='hero__aside'>
             {{if .IsAuthenticated}}
-                <p class='hero__stat-label'>Status</p>
                 <strong>{{if .Snippets}}{{len .Snippets}}{{else}}0{{end}} active notes</strong>
-                <p class='muted-copy'>Search the archive or add a new snippet while the context is still fresh.</p>
             {{else}}
-                <p class='hero__stat-label'>Access</p>
                 <strong>Private notebook</strong>
-                <p class='muted-copy'><a href='/user/signup'>Create an account</a> or <a href='/user/login'>sign in</a> to start collecting snippets.</p>
             {{end}}
         </div>
     </section>
@@ -34,8 +28,7 @@
             <section class='panel'>
                 <div class='panel__header'>
                     <div>
-                        <p class='eyebrow'>Recent entries</p>
-                        <h3>Saved for later reuse</h3>
+                        <h3>Recent</h3>
                     </div>
                 </div>
                 <div class='snippet-list'>
@@ -52,17 +45,14 @@
             </section>
         {{else}}
             <section class='empty-state'>
-                <p class='eyebrow'>Quiet page</p>
-                <h3>There is nothing here yet.</h3>
-                <p>Start with a snippet you know you will need again next week.</p>
+                <h3>No snippets yet</h3>
                 <a class='button' href='/snippet/create'>Write first snippet</a>
             </section>
         {{end}}
     {{else}}
         <section class='empty-state'>
-            <p class='eyebrow'>Private workspace</p>
-            <h3>Your snippets stay behind login.</h3>
-            <p><a href='/user/signup'>Signup</a> or <a href='/user/login'>login</a> to create your first snippet.</p>
+            <h3>Login required</h3>
+            <p><a href='/user/signup'>Signup</a> or <a href='/user/login'>login</a>.</p>
         </section>
     {{end}}
 {{end}}

@@ -3,11 +3,7 @@
 {{define "main"}}
 <section class='hero hero--compact'>
     <div>
-        <p class='eyebrow'>Account</p>
-        <h2>Your notebook profile.</h2>
-        <p class='lede'>
-            Review identity details, check when the account was created, and keep login credentials current.
-        </p>
+        <h2>Account</h2>
     </div>
 </section>
 
@@ -43,8 +39,7 @@
         </div>
 
         <aside class='account-card account-card--avatar'>
-            <p class='account-card__eyebrow account-card__eyebrow--avatar'>Avatar</p>
-            <h3 class='account-card__title'>Personal image</h3>
+            <h3 class='account-card__title'>Avatar</h3>
 
             <div class='account-avatar-frame'>
                 <div class='account-avatar-shell'>
@@ -54,7 +49,7 @@
 
             <form action="/account/avatar" method="post" enctype="multipart/form-data" class='account-avatar-form'>
                 <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
-                <label class='account-avatar-form__label' for="avatar">Upload a new JPG or PNG file.</label>
+                <label class='account-avatar-form__label' for="avatar">JPG or PNG</label>
                 <input class='account-avatar-form__input' id="avatar" type="file" name="avatar" accept="image/png, image/jpeg">
                 <button class='account-avatar-form__button' type="submit">Save avatar</button>
             </form>

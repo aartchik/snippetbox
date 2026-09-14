@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"html/template"
+	"strings"
 
 	"github.com/redis/go-redis/v9"
 
@@ -24,37 +25,37 @@ import (
 )
 
 type config struct {
-	addr      string
-	staticDir string
-	dsn       string
-	debug     bool
-	tls	      bool
+	addr          string
+	staticDir     string
+	dsn           string
+	debug         bool
+	tls           bool
 	redisAddr     string
-    redisPassword string
-    redisDB       int
+	redisPassword string
+	redisDB       int
 }
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets  models.SnippetModelInterface
-	users models.UserModelInterface
-	cache *redis.Client
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	snippets       models.SnippetModelInterface
+	users          models.UserModelInterface
+	cache          *redis.Client
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
-	debug bool
-	staticDir string
+	debug          bool
+	staticDir      string
 }
 
 func openRedis(cfg *config) (*redis.Client, error) {
-	rdb := redis.NewClient(&redis.Options{  
+	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.redisAddr,
-        Password: cfg.redisPassword, 
-        DB:       cfg.redisDB, 
-    })
+		Password: cfg.redisPassword,
+		DB:       cfg.redisDB,
+	})
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := rdb.Ping(ctx).Err(); err != nil {
@@ -68,7 +69,7 @@ func openDB(cfg *config) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := db.PingContext(ctx); err != nil {
 		return nil, err
@@ -81,7 +82,15 @@ func main() {
 
 	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP network address")
 	flag.StringVar(&cfg.staticDir, "static-dir", "ui/static", "Path to static assets")
-	flag.StringVar(&cfg.dsn, "dsn", "web:pass@tcp(localhost:3306)/snippetbox?parseTime=true", "Database connection string")
+	defaultDSN := strings.TrimSpace(os.Getenv("SNIPPETBOX_DSN"))
+	if defaultDSN == "" {
+		defaultDSN = strings.TrimSpace(os.Getenv("DB_DSN"))
+	}
+	if defaultDSN == "" {
+		defaultDSN = "web:pass@tcp(localhost:3306)/snippetbox?parseTime=true"
+	}
+	flag.StringVar(&cfg.dsn, "dsn", defaultDSN, "MySQL data source name")
+	flag.StringVar(&cfg.dsn, "db-dsn", defaultDSN, "MySQL data source name")
 	flag.BoolVar(&cfg.debug, "debug", false, "When running in debug mode, any detailed errors and stack traces should be displayed in the browser")
 	flag.BoolVar(&cfg.tls, "tls", false, "Enable HTTPS")
 	flag.StringVar(&cfg.redisAddr, "redis-addr", "localhost:6379", "Redis network address")
@@ -121,21 +130,21 @@ func main() {
 	}
 
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		snippets: &models.SnippetModel{DB: db, RDB: rdb},
-		users: &models.UserModel{DB: db},
-		templateCache: templateCache,
-		formDecoder: formDecoder,
+		errorLog:       errorLog,
+		infoLog:        infoLog,
+		snippets:       &models.SnippetModel{DB: db, RDB: rdb},
+		users:          &models.UserModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
-		debug: cfg.debug,
-		staticDir: cfg.staticDir,
+		debug:          cfg.debug,
+		staticDir:      cfg.staticDir,
 	}
 
 	srv := &http.Server{
-		Addr:     cfg.addr,
-		ErrorLog: errorLog,
-		Handler:  app.routes(),
+		Addr:      cfg.addr,
+		ErrorLog:  errorLog,
+		Handler:   app.routes(),
 		TLSConfig: tlsConfig,
 	}
 
@@ -147,4 +156,3 @@ func main() {
 	}
 	errorLog.Fatal(err)
 }
-

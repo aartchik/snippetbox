@@ -3,9 +3,7 @@
 {{define "main"}}
     <section class='hero hero--compact'>
         <div>
-            <p class='eyebrow'>Search results</p>
-            <h2>Find the snippet you already wrote once.</h2>
-            <p class='lede'>Use the notebook index below to jump back into previous work without scanning the full archive by hand.</p>
+            <h2>Search</h2>
         </div>
     </section>
 
@@ -22,7 +20,6 @@
         <section class='panel'>
             <div class='panel__header'>
                 <div>
-                    <p class='eyebrow'>Matches</p>
                     <h3>{{len .Snippets}} snippets found</h3>
                 </div>
             </div>
@@ -40,9 +37,7 @@
         </section>
     {{else}}
         <section class='empty-state'>
-            <p class='eyebrow'>No matches</p>
-            <h3>Nothing surfaced for this search.</h3>
-            <p>Try a broader term or return to the notebook index.</p>
+            <h3>No matches</h3>
         </section>
     {{end}}
 {{end}}

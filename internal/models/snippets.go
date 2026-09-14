@@ -12,36 +12,32 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-
-
 type SnippetModelInterface interface {
-    Insert(title string, content string, expires, user_id int) (int, error) 
-    Get(snip_id, user_id int) (*Snippet, error)
-    Latest(user_id int) ([]*Snippet, error)
-	Delete(snippet_id, user_id int) (error)
-	Update(title string, content string, expires, snippet_id, user_id int) (error)
+	Insert(title string, content string, expires, user_id, visibility_level int) (int, error)
+	Get(snip_id, user_id int) (*Snippet, error)
+	Latest(user_id int) ([]*Snippet, error)
+	Delete(snippet_id, user_id int) error
+	Update(title string, content string, expires, snippet_id, user_id int) error
 	GetSearch(title string, user_id int) ([]*Snippet, error)
 }
 
 type SnippetModelCacheInterface interface {
 	GetCache(ctx context.Context, key string) (string, error)
 	SetCache(ctx context.Context, key, value string, ttl time.Duration) error
-	DelCache(ctx context.Context, keys ...string) error 
+	DelCache(ctx context.Context, keys ...string) error
 }
 
-
-
 type Snippet struct {
-	ID      int 	  `json:"id"`
+	ID      int       `json:"id"`
 	Title   string    `json:"title"`
 	Content string    `json:"content"`
 	Created time.Time `json:"created"`
 	Expires time.Time `json:"expires"`
-	User_id int		  `json:"user_id"`
+	User_id int       `json:"user_id"`
 }
 
 type SnippetModel struct {
-	DB *sql.DB
+	DB  *sql.DB
 	RDB *redis.Client
 }
 
@@ -72,13 +68,10 @@ func (r *SnippetModel) DelCache(ctx context.Context, keys ...string) error {
 	return nil
 }
 
+func (m *SnippetModel) Insert(title string, content string, expires, user_id, visibility_level int) (int, error) {
+	stmt := `INSERT INTO snippets(title, content, created, expires, user_id, visibility_level) VALUES(?, ?, NOW(),  DATE_ADD(NOW(), INTERVAL ? DAY), ?, ?)`
 
-
-
-func (m *SnippetModel) Insert(title string, content string, expires, user_id int) (int, error) {
-	stmt := `INSERT INTO snippets(title, content, created, expires, user_id) VALUES(?, ?, NOW(),  DATE_ADD(NOW(), INTERVAL ? DAY), ?)`
-
-	result, err := m.DB.Exec(stmt, title, content, expires, user_id)
+	result, err := m.DB.Exec(stmt, title, content, expires, user_id, visibility_level)
 	if err != nil {
 		return 0, err
 	}
@@ -96,14 +89,14 @@ func (m *SnippetModel) Get(snip_id, user_id int) (*Snippet, error) {
 	key := fmt.Sprintf("snippet:%d", snip_id)
 
 	res, err := m.GetCache(ctx, key)
-	if res != "" { 
+	if res != "" {
 		var s Snippet
 		err = json.Unmarshal([]byte(res), &s)
 		if err == nil {
 			return &s, nil
 		}
 	}
-	
+
 	stmt := `Select id, title, content, created, expires, user_id from snippets where id = ? and expires > NOW() and user_id = ?`
 	row := m.DB.QueryRow(stmt, snip_id, user_id)
 	s := &Snippet{}
@@ -116,16 +109,16 @@ func (m *SnippetModel) Get(snip_id, user_id int) (*Snippet, error) {
 		}
 	}
 
-	js, err :=  json.Marshal(s)
+	js, err := json.Marshal(s)
 	if err == nil {
-		_ = m.SetCache(ctx, key, string(js), 15 * time.Second)
-	} 
+		_ = m.SetCache(ctx, key, string(js), 15*time.Second)
+	}
 
 	return s, nil
 }
 
 func (m *SnippetModel) Latest(user_id int) ([]*Snippet, error) {
-	stmt := `SELECT * from snippets where expires > NOW() and user_id = ? order by created desc limit 10`
+	stmt := `SELECT id, title, content, created, expires, user_id from snippets where expires > NOW() and user_id = ? order by created desc, id desc limit 10`
 
 	rows, err := m.DB.Query(stmt, user_id)
 	if err != nil {
@@ -138,23 +131,22 @@ func (m *SnippetModel) Latest(user_id int) ([]*Snippet, error) {
 
 	for rows.Next() {
 		s := &Snippet{}
-		err = rows.Scan(&s.ID,&s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id)
-		
+		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id)
+
 		if err != nil {
 			return nil, err
 		}
 		snippets = append(snippets, s)
 	}
-	  if err = rows.Err(); err != nil {
-        return nil, err
-    }
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 	return snippets, nil
 }
 
-
-func (m *SnippetModel) Delete(snippet_id, user_id int) (error) {
+func (m *SnippetModel) Delete(snippet_id, user_id int) error {
 	stmt := `delete from snippets where id = ? and user_id = ?`
-	result, err := m.DB.Exec(stmt, snippet_id)
+	result, err := m.DB.Exec(stmt, snippet_id, user_id)
 	if err != nil {
 		return err
 	}
@@ -170,12 +162,14 @@ func (m *SnippetModel) Delete(snippet_id, user_id int) (error) {
 
 	key := fmt.Sprintf("snippet:%d", snippet_id)
 	err = m.DelCache(context.Background(), key)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (m *SnippetModel) Update(title string, content string, expires, snippet_id, user_id int) (error) {
-
+func (m *SnippetModel) Update(title string, content string, expires, snippet_id, user_id int) error {
 
 	stmt := `update snippets set title = ?, content = ?, expires = DATE_ADD(NOW(), INTERVAL ? DAY)  where id = ? and user_id = ?`
 	_, err := m.DB.Exec(stmt, title, content, expires, snippet_id, user_id)
@@ -189,7 +183,6 @@ func (m *SnippetModel) Update(title string, content string, expires, snippet_id,
 
 }
 
-
 func (m *SnippetModel) GetSearch(title string, user_id int) ([]*Snippet, error) {
 	stmt := `SELECT id, title, content, created, expires, user_id,
 			MATCH(title, content) AGAINST (? IN BOOLEAN MODE) AS score
@@ -197,7 +190,7 @@ func (m *SnippetModel) GetSearch(title string, user_id int) ([]*Snippet, error) 
 			WHERE expires > NOW() AND user_id = ? AND MATCH(title, content) AGAINST (? IN BOOLEAN MODE)
 			ORDER BY score DESC, created DESC
 			LIMIT 50;`
-	
+
 	q := strings.TrimSpace(title)
 	q = q + "*"
 	rows, err := m.DB.Query(stmt, q, user_id, q)
@@ -212,15 +205,15 @@ func (m *SnippetModel) GetSearch(title string, user_id int) ([]*Snippet, error) 
 	for rows.Next() {
 		s := &Snippet{}
 		var score float64
-		err = rows.Scan(&s.ID,&s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id, &score)
-		
+		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id, &score)
+
 		if err != nil {
 			return nil, err
 		}
 		snippets = append(snippets, s)
 	}
-	  if err = rows.Err(); err != nil {
-        return nil, err
-    }
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 	return snippets, nil
 }

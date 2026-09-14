@@ -1,11 +1,9 @@
 {{define "title"}}Create a New Snippet{{end}}
 
 {{define "main"}}
-<section class='form-shell'>
+<section class='form-shell form-shell--centered'>
     <div class='form-shell__intro'>
-        <p class='eyebrow'>New entry</p>
-        <h2>Capture a snippet before it slips away.</h2>
-        <p class='lede'>Keep the title brief, make the body useful, and give it an expiry that matches how long it will matter.</p>
+        <h2>New snippet</h2>
     </div>
     <form action='/snippet/create' method='POST' class='panel form-panel'>
         <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
@@ -32,6 +30,17 @@
                 <label class='radio-option'><input type='radio' name='expires' value='365' {{if (eq .Form.Expires 365)}}checked{{end}}> <span>One year</span></label>
                 <label class='radio-option'><input type='radio' name='expires' value='7' {{if (eq .Form.Expires 7)}}checked{{end}}> <span>One week</span></label>
                 <label class='radio-option'><input type='radio' name='expires' value='1' {{if (eq .Form.Expires 1)}}checked{{end}}> <span>One day</span></label>
+            </div>
+        </div>
+        <div>
+            <label>Visibility</label>
+            {{with .Form.FieldErrors.visibility_level}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <div class='radio-group'>
+                <label class='radio-option'><input type='radio' name='visibility_level' value='0' {{if (eq .Form.Visibility_level 0)}}checked{{end}}> <span>Private</span></label>
+                <label class='radio-option'><input type='radio' name='visibility_level' value='1' {{if (eq .Form.Visibility_level 1)}}checked{{end}}> <span>Shared</span></label>
+                <label class='radio-option'><input type='radio' name='visibility_level' value='2' {{if (eq .Form.Visibility_level 2)}}checked{{end}}> <span>Public</span></label>
             </div>
         </div>
         <div>

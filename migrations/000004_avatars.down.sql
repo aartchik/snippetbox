@@ -1,1 +1,1 @@
-alter table users drop column avatar_url;
+ALTER TABLE users DROP COLUMN avatar_url;

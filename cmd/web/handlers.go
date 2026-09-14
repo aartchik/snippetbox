@@ -21,6 +21,7 @@ type snippetCreateForm struct {
 	Content             string `form:"content"`
 	Expires             int    `form:"expires"`
 	validator.Validator `form:"-"`
+	Visibility_level    int `form:"visibility_level"`
 }
 
 type usersSignupForm struct {
@@ -145,7 +146,7 @@ func (app *application) updateSnippetPost(w http.ResponseWriter, r *http.Request
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
 	form.CheckField(validator.MaxChar(form.Content, 1000), "content", "This field cannot be more 1000 characters long")
 
-	form.CheckField(validator.Accept_values(form.Expires, 1, 7, 365), "expires", "Expires cannot be current value")
+	form.CheckField(validator.Accept_values_int(form.Expires, 1, 7, 365), "expires", "Expires cannot be current value")
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
@@ -511,13 +512,15 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	form.CheckField(validator.Accept_values_int(form.Visibility_level, 0, 1, 2), "visibility_level", "Level visibility cannot be current value")
+
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
 	form.CheckField(validator.MaxChar(form.Title, 100), "title", "This field cannot be more 100 characters long")
 
 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
 	form.CheckField(validator.MaxChar(form.Content, 1000), "content", "This field cannot be more 1000 characters long")
 
-	form.CheckField(validator.Accept_values(form.Expires, 1, 7, 365), "expires", "Expires cannot be current value")
+	form.CheckField(validator.Accept_values_int(form.Expires, 1, 7, 365), "expires", "Expires cannot be current value")
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
@@ -526,7 +529,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 	user_id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
-	res, err := app.snippets.Insert(form.Title, form.Content, form.Expires, user_id)
+	res, err := app.snippets.Insert(form.Title, form.Content, form.Expires, user_id, form.Visibility_level)
 	if err != nil {
 		app.serverError(w, err)
 		return

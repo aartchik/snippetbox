@@ -71,6 +71,9 @@ MYSQL_ROOT_PASSWORD=rootpass
 MYSQL_DATABASE=snippetbox
 MYSQL_USER=web
 MYSQL_PASSWORD=pass
+DB_PORT=3308
+TEST_DB_PORT=3307
+REDIS_PORT=6380
 ```
 
 If you use a local `.env` file, `docker compose` will pick it up automatically.
@@ -109,8 +112,8 @@ docker compose down -v
 If you want to run the application directly on your machine, you need:
 
 - Go installed;
-- MySQL running locally;
-- Redis running locally;
+- MySQL running locally on `localhost:3306`;
+- Redis running locally, or the Compose Redis service exposed on `localhost:6380`;
 - the schema applied from the `migrations/` directory.
 
 Then start the server:
@@ -118,7 +121,7 @@ Then start the server:
 ```bash
 go run ./cmd/web \
   -dsn="web:pass@tcp(localhost:3306)/snippetbox?parseTime=true" \
-  -redis-addr="localhost:6379" \
+  -redis-addr="localhost:6380" \
   -redis-password="" \
   -redis-db=0 \
   -tls=false
@@ -144,6 +147,47 @@ docker run --rm -p 4000:4000 snippetbox
 
 In practice, `docker compose up --build` is the preferred workflow because it starts the dependent services too.
 
+## Deploy on a VPS
+
+The repository includes a production reverse-proxy profile. It expects a Linux VPS with Docker, a domain pointing to the VPS IP, and inbound ports `80` and `443` allowed by the firewall. Docker installation instructions are available in the [official Docker documentation](https://docs.docker.com/engine/install/).
+
+On the server:
+
+```bash
+git clone https://github.com/aartchik/snippetbox.git
+cd snippetbox
+```
+
+Create `.env` (it is ignored by Git) with strong, unique values:
+
+```env
+DOMAIN=app.example.com
+MYSQL_ROOT_PASSWORD=replace-with-a-long-random-value
+MYSQL_DATABASE=snippetbox
+MYSQL_USER=snippetbox
+MYSQL_PASSWORD=replace-with-another-long-random-value
+SNIPPETBOX_DSN=snippetbox:replace-with-another-long-random-value@tcp(db:3306)/snippetbox?parseTime=true
+APP_PORT=4000
+```
+
+Replace `app.example.com` with the real domain and use the same password in `MYSQL_PASSWORD` and `SNIPPETBOX_DSN`. Start the application and Caddy:
+
+```bash
+docker compose --profile prod up -d --build
+docker compose ps
+curl -f http://127.0.0.1:4000/ping
+```
+
+After DNS has propagated, open `https://app.example.com`. Caddy terminates HTTPS and proxies traffic to the app; MySQL, Redis, and the app port are bound to localhost only. The Caddy profile stores certificates in a persistent Docker volume.
+
+Useful maintenance commands:
+
+```bash
+docker compose logs -f app caddy
+docker compose --profile prod pull
+docker compose --profile prod up -d --build
+```
+
 ## Database migrations
 
 Migrations live in the [`migrations/`](./migrations) directory.
@@ -155,7 +199,9 @@ They currently set up:
 - `snippets` table;
 - index on snippet creation date;
 - unique constraint and index for user email;
-- full-text index for snippet search by title and content.
+- full-text index for snippet search by title and content;
+- user avatar URL column;
+- snippet visibility level column.
 
 Compose runs migrations automatically through the `migrate/migrate` container before the app starts.
 
@@ -164,6 +210,8 @@ Current migration files:
 - `000001_create_snippetbox_table.*`
 - `000002_snippetbox_create_index.*`
 - `000003_search_title_content.*`
+- `000004_avatars.*`
+- `000005_visibility_snippets.*`
 
 This means a fresh environment can be brought up from scratch without creating tables manually.
 
@@ -211,12 +259,26 @@ Covered areas include:
 Start test infrastructure:
 
 ```bash
-docker compose --profile test up -d test-db redis
+make test-env-up
 ```
 
 Then run:
 
 ```bash
+make test
+```
+
+The local test defaults are:
+
+- MySQL: `test_web:pass@tcp(localhost:3307)/test_snippetbox`
+- Redis: `localhost:6380`, DB `1`
+
+You can override them with:
+
+```bash
+SNIPPETBOX_TEST_DSN="test_web:pass@tcp(localhost:3307)/test_snippetbox?parseTime=true&multiStatements=true&time_zone=%27%2B00%3A00%27" \
+SNIPPETBOX_TEST_REDIS_ADDR="localhost:6380" \
+SNIPPETBOX_TEST_REDIS_DB=1 \
 go test ./...
 ```
 
@@ -225,7 +287,7 @@ go test ./...
 There is also a dedicated test service in `docker-compose.yml`:
 
 ```bash
-docker compose --profile test run --rm test
+make test-compose
 ```
 
 This is useful when you want a repeatable test environment without relying on locally installed Go tooling.

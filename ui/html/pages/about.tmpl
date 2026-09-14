@@ -1,30 +1,24 @@
-{{define "title"}}About{{end}}
+{{define "title"}}Notebook{{end}}
 
 {{define "main"}}
 <section class='hero hero--compact'>
     <div>
-        <p class='eyebrow'>About the notebook</p>
-        <h2>Snippetbox is a compact archive for code and context.</h2>
-        <p class='lede'>Built in Go, it focuses on the less glamorous but durable parts of web work: routing, templates, sessions, auth, validation, persistence, caching, and transport security.</p>
+        <h2>Notebook</h2>
     </div>
 </section>
 
 <section class='panel prose'>
-    <p>Snippetbox is a small web application written in Go by <a href='https://github.com/aartchik'>aartchik</a> that lets users create, store, and manage text snippets.</p>
-    <p>The project is also a practical exercise in building secure server-rendered applications with real backend patterns instead of toy examples.</p>
+    <p>Snippetbox is a Go project for saving and managing text snippets.</p>
 
     <h3>Stack</h3>
     <ul class='tag-list'>
-        <li><strong>Go</strong> with `net/http`</li>
-        <li><strong>html/template</strong> for server rendering</li>
-        <li><strong>MySQL</strong> for users, snippets, and sessions</li>
-        <li><strong>scs</strong> for session management</li>
-        <li><strong>nosurf</strong> for CSRF protection</li>
-        <li><strong>httprouter</strong> for request routing</li>
-        <li><strong>alice</strong> for middleware composition</li>
-        <li><strong>Redis</strong> for cache reads</li>
+        <li>Go</li>
+        <li>net/http</li>
+        <li>html/template</li>
+        <li>MySQL</li>
+        <li>Sessions</li>
+        <li>CSRF protection</li>
+        <li>Redis</li>
     </ul>
 </section>
 {{end}}
-
-

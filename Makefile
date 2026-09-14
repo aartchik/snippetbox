@@ -1,5 +1,14 @@
-include .env
-DSN=mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp(localhost:3306)/$(MYSQL_DATABASE)?multiStatements=true
+-include .env
+
+MYSQL_ROOT_PASSWORD ?= rootpass
+MYSQL_DATABASE ?= snippetbox
+MYSQL_USER ?= web
+MYSQL_PASSWORD ?= pass
+DB_PORT ?= 3308
+TEST_DB_PORT ?= 3307
+REDIS_PORT ?= 6380
+
+DSN=mysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp(localhost:$(DB_PORT))/$(MYSQL_DATABASE)?multiStatements=true
 
 
 export PROJECT_ROOT=$(shell pwd)
@@ -8,6 +17,14 @@ env-up:
 	docker compose up 
 env-down:
 	docker compose down
+test-env-up:
+	docker compose --profile test up -d test-db redis
+test-env-down:
+	docker compose --profile test down
+test:
+	go test ./...
+test-compose:
+	docker compose --profile test run --rm test
 
 migrate_up:
 	migrate -path migrations -database "$(DSN)" up

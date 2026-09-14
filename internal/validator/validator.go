@@ -40,9 +40,18 @@ func Matches(email string, rx *regexp.Regexp) bool {
 	return rx.MatchString(email)
 }
 
-func Accept_values(expires int, value... int) bool {
+func Accept_values_int(expires int, value... int) bool {
 	for r:= range value {
 		if expires == value[r] {
+			return true
+		}
+	}
+	return false
+}
+
+func Accept_values_string(visibility string, value... string) bool {
+	for r:= range value {
+		if visibility == value[r] {
 			return true
 		}
 	}

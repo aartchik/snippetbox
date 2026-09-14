@@ -51,7 +51,7 @@ func TestSnippetModelUpdate(t *testing.T) {
 	rdb := newTestRedis(t)
 	m := SnippetModel{DB: db, RDB: rdb}
 
-	id, err := m.Insert("old title", "old content", 7, 1)
+	id, err := m.Insert("old title", "old content", 7, 1, 0)
 	assert.NilError(t, err)
 
 	start := time.Now().UTC()
@@ -79,7 +79,7 @@ func TestSnippetModelDelete(t *testing.T) {
 	err := result.Scan(&cnt)
 	assert.NilError(t, err)
 
-	id, err := m.Insert("old title", "old content", 7, 1)
+	id, err := m.Insert("old title", "old content", 7, 1, 0)
 	assert.NilError(t, err)
 
 	err = m.Delete(id, 1)
@@ -89,6 +89,26 @@ func TestSnippetModelDelete(t *testing.T) {
 	err = result.Scan(&cnt_new)
 
 	assert.Equal(t, cnt_new, cnt)
+}
+
+func TestSnippetModelLatest(t *testing.T) {
+	db := newTestDB(t)
+	rdb := newTestRedis(t)
+	m := SnippetModel{DB: db, RDB: rdb}
+
+	_, err := m.Insert("first title", "first content", 7, 1, 0)
+	assert.NilError(t, err)
+	_, err = m.Insert("second title", "second content", 7, 1, 1)
+	assert.NilError(t, err)
+	_, err = m.Insert("other user title", "other user content", 7, 2, 0)
+	assert.NilError(t, err)
+
+	snippets, err := m.Latest(1)
+	assert.NilError(t, err)
+
+	assert.Equal(t, len(snippets), 2)
+	assert.Equal(t, snippets[0].Title, "second title")
+	assert.Equal(t, snippets[1].Title, "first title")
 }
 
 func TestSnippetModelCacheSet(t *testing.T) {
