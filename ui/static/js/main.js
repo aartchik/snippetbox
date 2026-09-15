@@ -30,3 +30,34 @@ if (themeToggle) {
 		applyTheme(nextTheme);
 	});
 }
+
+var avatarForm = document.querySelector("[data-avatar-form]");
+if (avatarForm) {
+	var avatarInput = avatarForm.querySelector('input[type="file"]');
+	var avatarButton = avatarForm.querySelector('button[type="submit"]');
+	var avatarHint = avatarForm.querySelector("[data-avatar-hint]");
+
+	function updateAvatarFormState() {
+		var hasFile = avatarInput && avatarInput.files && avatarInput.files.length > 0;
+		if (avatarButton) {
+			avatarButton.disabled = !hasFile;
+		}
+		if (avatarHint) {
+			avatarHint.classList.toggle("is-error", !hasFile);
+			avatarHint.textContent = hasFile ? "Ready to upload." : "Choose a JPG or PNG before saving.";
+		}
+	}
+
+	if (avatarInput) {
+		avatarInput.addEventListener("change", updateAvatarFormState);
+	}
+
+	avatarForm.addEventListener("submit", function (event) {
+		if (!avatarInput || !avatarInput.files || avatarInput.files.length === 0) {
+			event.preventDefault();
+			updateAvatarFormState();
+		}
+	});
+
+	updateAvatarFormState();
+}

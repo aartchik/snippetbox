@@ -14,10 +14,10 @@ import (
 func newTestDB(t *testing.T) *sql.DB {
 	dsn := os.Getenv("SNIPPETBOX_TEST_DSN")
 	if dsn == "" {
-		dsn = "test_web:pass@tcp(localhost:3307)/test_snippetbox?parseTime=true&multiStatements=true&time_zone=%27%2B00%3A00%27"
+		dsn = "postgres://test_web:pass@127.0.0.1:5433/test_snippetbox?sslmode=disable"
 	}
 
-	db, err := sql.Open("mysql", dsn)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func newTestDB(t *testing.T) *sql.DB {
 func newTestRedis(t *testing.T) *redis.Client {
 	addr := os.Getenv("SNIPPETBOX_TEST_REDIS_ADDR")
 	if addr == "" {
-		addr = "localhost:6380"
+		addr = "127.0.0.1:6380"
 	}
 
 	db := 1

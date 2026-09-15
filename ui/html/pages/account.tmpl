@@ -43,15 +43,16 @@
 
             <div class='account-avatar-frame'>
                 <div class='account-avatar-shell'>
-                    <img class='account-avatar-image' src="{{.AvatarURL}}" alt="avatar">
+                    <img class='account-avatar-image' src="{{if .AvatarURL}}{{.AvatarURL}}{{else}}/static/img/avatars/penguin.png{{end}}" alt="{{.Name}} avatar" onerror="this.onerror=null; this.src='/static/img/avatars/penguin.png';">
                 </div>
             </div>
 
-            <form action="/account/avatar" method="post" enctype="multipart/form-data" class='account-avatar-form'>
+            <form action="/account/avatar" method="post" enctype="multipart/form-data" class='account-avatar-form' data-avatar-form>
                 <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
                 <label class='account-avatar-form__label' for="avatar">JPG or PNG</label>
-                <input class='account-avatar-form__input' id="avatar" type="file" name="avatar" accept="image/png, image/jpeg">
-                <button class='account-avatar-form__button' type="submit">Save avatar</button>
+                <input class='account-avatar-form__input' id="avatar" type="file" name="avatar" accept="image/png, image/jpeg" required>
+                <p class='account-avatar-form__hint' data-avatar-hint>Choose a JPG or PNG before saving.</p>
+                <button class='account-avatar-form__button' type="submit" disabled>Save avatar</button>
             </form>
         </aside>
     </div>

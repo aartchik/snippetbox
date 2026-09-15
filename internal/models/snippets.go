@@ -36,12 +36,16 @@ type Snippet struct {
 	User_id int       `json:"user_id"`
 }
 
-type SnippetModel struct {
-	DB  *sql.DB
+type SnippetModelCache struct {
 	RDB *redis.Client
 }
 
-func (r *SnippetModel) GetCache(ctx context.Context, key string) (string, error) {
+type SnippetModelWithPsql struct {
+	DB *sql.DB
+	SnippetModelCache
+}
+
+func (r *SnippetModelCache) GetCache(ctx context.Context, key string) (string, error) {
 	val, err := r.RDB.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -52,7 +56,7 @@ func (r *SnippetModel) GetCache(ctx context.Context, key string) (string, error)
 	return val, nil
 }
 
-func (r *SnippetModel) SetCache(ctx context.Context, key, value string, ttl time.Duration) error {
+func (r *SnippetModelCache) SetCache(ctx context.Context, key, value string, ttl time.Duration) error {
 	err := r.RDB.Set(ctx, key, value, ttl).Err()
 	if err != nil {
 		return err
@@ -60,7 +64,7 @@ func (r *SnippetModel) SetCache(ctx context.Context, key, value string, ttl time
 	return nil
 }
 
-func (r *SnippetModel) DelCache(ctx context.Context, keys ...string) error {
+func (r *SnippetModelCache) DelCache(ctx context.Context, keys ...string) error {
 	err := r.RDB.Del(ctx, keys...).Err()
 	if err != nil {
 		return err
@@ -68,24 +72,62 @@ func (r *SnippetModel) DelCache(ctx context.Context, keys ...string) error {
 	return nil
 }
 
-func (m *SnippetModel) Insert(title string, content string, expires, user_id, visibility_level int) (int, error) {
-	stmt := `INSERT INTO snippets(title, content, created, expires, user_id, visibility_level) VALUES(?, ?, NOW(),  DATE_ADD(NOW(), INTERVAL ? DAY), ?, ?)`
+func (m *SnippetModelWithPsql) Insert(
+	title string,
+	content string,
+	expires, userID, visibilityLevel int,
+) (int, error) {
 
-	result, err := m.DB.Exec(stmt, title, content, expires, user_id, visibility_level)
+	stmt := `
+        INSERT INTO snippets (
+            title,
+            content,
+            created,
+            expires,
+            user_id,
+            visibility_level
+        )
+        VALUES (
+            $1,
+            $2,
+            NOW(),
+            NOW() + ($3 * INTERVAL '1 day'),
+            $4,
+            $5
+        )
+        RETURNING id
+    `
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		3*time.Second,
+	)
+	defer cancel()
+
+	var id int
+
+	err := m.DB.QueryRowContext(
+		ctx,
+		stmt,
+		title,
+		content,
+		expires,
+		userID,
+		visibilityLevel,
+	).Scan(&id)
+
 	if err != nil {
 		return 0, err
 	}
-	id, err := result.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
 
-	return int(id), nil
+	return id, nil
 }
 
-func (m *SnippetModel) Get(snip_id, user_id int) (*Snippet, error) {
+func (m *SnippetModelWithPsql) Get(snip_id, user_id int) (*Snippet, error) {
 
 	ctx := context.Background()
+	ctx2, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
 	key := fmt.Sprintf("snippet:%d", snip_id)
 
 	res, err := m.GetCache(ctx, key)
@@ -97,8 +139,8 @@ func (m *SnippetModel) Get(snip_id, user_id int) (*Snippet, error) {
 		}
 	}
 
-	stmt := `Select id, title, content, created, expires, user_id from snippets where id = ? and expires > NOW() and user_id = ?`
-	row := m.DB.QueryRow(stmt, snip_id, user_id)
+	stmt := `Select id, title, content, created, expires, user_id from snippets where id = $1 and expires > NOW() and user_id = $2`
+	row := m.DB.QueryRowContext(ctx2, stmt, snip_id, user_id)
 	s := &Snippet{}
 	err = row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id)
 	if err != nil {
@@ -117,10 +159,11 @@ func (m *SnippetModel) Get(snip_id, user_id int) (*Snippet, error) {
 	return s, nil
 }
 
-func (m *SnippetModel) Latest(user_id int) ([]*Snippet, error) {
-	stmt := `SELECT id, title, content, created, expires, user_id from snippets where expires > NOW() and user_id = ? order by created desc, id desc limit 10`
-
-	rows, err := m.DB.Query(stmt, user_id)
+func (m *SnippetModelWithPsql) Latest(user_id int) ([]*Snippet, error) {
+	stmt := `SELECT id, title, content, created, expires, user_id from snippets where expires > NOW() and user_id = $1 order by created desc, id desc limit 10`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	rows, err := m.DB.QueryContext(ctx, stmt, user_id)
 	if err != nil {
 		return nil, err
 	}
@@ -144,9 +187,11 @@ func (m *SnippetModel) Latest(user_id int) ([]*Snippet, error) {
 	return snippets, nil
 }
 
-func (m *SnippetModel) Delete(snippet_id, user_id int) error {
-	stmt := `delete from snippets where id = ? and user_id = ?`
-	result, err := m.DB.Exec(stmt, snippet_id, user_id)
+func (m *SnippetModelWithPsql) Delete(snippet_id, user_id int) error {
+	stmt := `delete from snippets where id = $1 and user_id = $2`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	result, err := m.DB.ExecContext(ctx, stmt, snippet_id, user_id)
 	if err != nil {
 		return err
 	}
@@ -169,12 +214,23 @@ func (m *SnippetModel) Delete(snippet_id, user_id int) error {
 	return nil
 }
 
-func (m *SnippetModel) Update(title string, content string, expires, snippet_id, user_id int) error {
+func (m *SnippetModelWithPsql) Update(title string, content string, expires, snippet_id, user_id int) error {
 
-	stmt := `update snippets set title = ?, content = ?, expires = DATE_ADD(NOW(), INTERVAL ? DAY)  where id = ? and user_id = ?`
-	_, err := m.DB.Exec(stmt, title, content, expires, snippet_id, user_id)
+	stmt := `update snippets set title = $1, content = $2, expires =  NOW() + ($3 * INTERVAL '1 day') where id = $4 and user_id = $5`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	res, err := m.DB.ExecContext(ctx, stmt, title, content, expires, snippet_id, user_id)
 	if err != nil {
 		return err
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return ErrNoRecord
 	}
 
 	key := fmt.Sprintf("snippet:%d", snippet_id)
@@ -183,21 +239,45 @@ func (m *SnippetModel) Update(title string, content string, expires, snippet_id,
 
 }
 
-func (m *SnippetModel) GetSearch(title string, user_id int) ([]*Snippet, error) {
-	stmt := `SELECT id, title, content, created, expires, user_id,
-			MATCH(title, content) AGAINST (? IN BOOLEAN MODE) AS score
-			FROM snippets
-			WHERE expires > NOW() AND user_id = ? AND MATCH(title, content) AGAINST (? IN BOOLEAN MODE)
-			ORDER BY score DESC, created DESC
-			LIMIT 50;`
+func (m *SnippetModelWithPsql) GetSearch(
+	title string,
+	userID int,
+) ([]*Snippet, error) {
+
+	stmt := `
+        SELECT
+            id,
+            title,
+            content,
+            created,
+            expires,
+            user_id,
+            ts_rank(
+                to_tsvector('english', title || ' ' || content),
+                plainto_tsquery('english', $1)
+            ) AS score
+        FROM snippets
+        WHERE
+            expires > NOW()
+            AND user_id = $2
+            AND to_tsvector('english', title || ' ' || content)
+                @@ plainto_tsquery('english', $1)
+        ORDER BY score DESC, created DESC
+        LIMIT 50
+    `
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		3*time.Second,
+	)
+	defer cancel()
 
 	q := strings.TrimSpace(title)
-	q = q + "*"
-	rows, err := m.DB.Query(stmt, q, user_id, q)
+
+	rows, err := m.DB.QueryContext(ctx, stmt, q, userID)
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
 	snippets := []*Snippet{}
@@ -205,15 +285,26 @@ func (m *SnippetModel) GetSearch(title string, user_id int) ([]*Snippet, error) 
 	for rows.Next() {
 		s := &Snippet{}
 		var score float64
-		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires, &s.User_id, &score)
 
+		err := rows.Scan(
+			&s.ID,
+			&s.Title,
+			&s.Content,
+			&s.Created,
+			&s.Expires,
+			&s.User_id,
+			&score,
+		)
 		if err != nil {
 			return nil, err
 		}
+
 		snippets = append(snippets, s)
 	}
-	if err = rows.Err(); err != nil {
+
+	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+
 	return snippets, nil
 }

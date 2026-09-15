@@ -36,7 +36,7 @@ func TestSnippetModelExist(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			db := newTestDB(t)
 
-			m := UserModel{db}
+			m := UserModelWithPsql{db}
 
 			exists, err := m.Exist(tt.userID)
 
@@ -49,7 +49,7 @@ func TestSnippetModelExist(t *testing.T) {
 func TestSnippetModelUpdate(t *testing.T) {
 	db := newTestDB(t)
 	rdb := newTestRedis(t)
-	m := SnippetModel{DB: db, RDB: rdb}
+	m := SnippetModelWithPsql{db, SnippetModelCache{RDB: rdb}}
 
 	id, err := m.Insert("old title", "old content", 7, 1, 0)
 	assert.NilError(t, err)
@@ -72,7 +72,7 @@ func TestSnippetModelUpdate(t *testing.T) {
 func TestSnippetModelDelete(t *testing.T) {
 	db := newTestDB(t)
 	rdb := newTestRedis(t)
-	m := SnippetModel{DB: db, RDB: rdb}
+	m := SnippetModelWithPsql{db, SnippetModelCache{RDB: rdb}}
 	var cnt, cnt_new int
 
 	result := m.DB.QueryRow("select count(*) from snippets")
@@ -94,7 +94,7 @@ func TestSnippetModelDelete(t *testing.T) {
 func TestSnippetModelLatest(t *testing.T) {
 	db := newTestDB(t)
 	rdb := newTestRedis(t)
-	m := SnippetModel{DB: db, RDB: rdb}
+	m := SnippetModelWithPsql{db, SnippetModelCache{RDB: rdb}}
 
 	_, err := m.Insert("first title", "first content", 7, 1, 0)
 	assert.NilError(t, err)
@@ -114,7 +114,7 @@ func TestSnippetModelLatest(t *testing.T) {
 func TestSnippetModelCacheSet(t *testing.T) {
 
 	rdb := newTestRedis(t)
-	r := SnippetModel{RDB: rdb}
+	r := SnippetModelWithPsql{SnippetModelCache: SnippetModelCache{RDB: rdb}}
 	ctx := context.Background()
 
 	res, err := r.GetCache(ctx, "missing")

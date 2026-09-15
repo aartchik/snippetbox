@@ -1,0 +1,2 @@
+ALTER TABLE snippets
+  ADD COLUMN visibility_level INTEGER NOT NULL DEFAULT 0;

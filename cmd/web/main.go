@@ -14,14 +14,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/alexedwards/scs/postgresstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	"snippetbox.net/internal/models"
 
 	"time"
-
-	"github.com/alexedwards/scs/mysqlstore"
-	"github.com/alexedwards/scs/v2"
 )
 
 type config struct {
@@ -65,7 +64,7 @@ func openRedis(cfg *config) (*redis.Client, error) {
 }
 
 func openDB(cfg *config) (*sql.DB, error) {
-	db, err := sql.Open("mysql", cfg.dsn)
+	db, err := sql.Open("postgres", cfg.dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -87,10 +86,10 @@ func main() {
 		defaultDSN = strings.TrimSpace(os.Getenv("DB_DSN"))
 	}
 	if defaultDSN == "" {
-		defaultDSN = "web:pass@tcp(localhost:3306)/snippetbox?parseTime=true"
+		defaultDSN = "postgres://web:pass@127.0.0.1:5432/snippetbox?sslmode=disable"
 	}
-	flag.StringVar(&cfg.dsn, "dsn", defaultDSN, "MySQL data source name")
-	flag.StringVar(&cfg.dsn, "db-dsn", defaultDSN, "MySQL data source name")
+	flag.StringVar(&cfg.dsn, "dsn", defaultDSN, "PostgreSQL data source name")
+	flag.StringVar(&cfg.dsn, "db-dsn", defaultDSN, "PostgreSQL data source name")
 	flag.BoolVar(&cfg.debug, "debug", false, "When running in debug mode, any detailed errors and stack traces should be displayed in the browser")
 	flag.BoolVar(&cfg.tls, "tls", false, "Enable HTTPS")
 	flag.StringVar(&cfg.redisAddr, "redis-addr", "localhost:6379", "Redis network address")
@@ -121,7 +120,7 @@ func main() {
 	formDecoder := form.NewDecoder()
 
 	sessionManager := scs.New()
-	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Store = postgresstore.New(db)
 	sessionManager.Lifetime = 24 * time.Hour * 7
 	sessionManager.Cookie.Secure = cfg.tls
 
@@ -132,8 +131,8 @@ func main() {
 	app := &application{
 		errorLog:       errorLog,
 		infoLog:        infoLog,
-		snippets:       &models.SnippetModel{DB: db, RDB: rdb},
-		users:          &models.UserModel{DB: db},
+		snippets:       &models.SnippetModelWithPsql{DB: db, SnippetModelCache: models.SnippetModelCache{RDB: rdb}},
+		users:          &models.UserModelWithPsql{DB: db},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,

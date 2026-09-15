@@ -1,83 +1,82 @@
 package models
 
 import (
-    "testing"
+	"testing"
 
-    "snippetbox.net/internal/assert"
+	"snippetbox.net/internal/assert"
 )
 
 func TestUserModelExists(t *testing.T) {
- 
-    tests := []struct {
-        name   string
-        userID int
-        want   bool
-    }{
-        {
-            name:   "Valid ID",
-            userID: 1,
-            want:   true,
-        },
-        {
-            name:   "Zero ID",
-            userID: 0,
-            want:   false,
-        },
-        {
-            name:   "Non-existent ID",
-            userID: 2,
-            want:   false,
-        },
-    }
 
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            db := newTestDB(t)
+	tests := []struct {
+		name   string
+		userID int
+		want   bool
+	}{
+		{
+			name:   "Valid ID",
+			userID: 1,
+			want:   true,
+		},
+		{
+			name:   "Zero ID",
+			userID: 0,
+			want:   false,
+		},
+		{
+			name:   "Non-existent ID",
+			userID: 2,
+			want:   false,
+		},
+	}
 
-            m := UserModel{db}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db := newTestDB(t)
 
-            exists, err := m.Exist(tt.userID)
+			m := UserModelWithPsql{db}
 
-            assert.Equal(t, exists, tt.want)
-            assert.NilError(t, err)
-        })
-    }
+			exists, err := m.Exist(tt.userID)
+
+			assert.Equal(t, exists, tt.want)
+			assert.NilError(t, err)
+		})
+	}
 }
 
-
 func TestUserModelDelete(t *testing.T) {
-    tests := []struct {
-        name   string
-        userID int
-        want   bool
-    }{
-        {
-            name:   "Valid ID",
-            userID: 1,
-            want:   true,
-        },
-        {
-            name:   "Zero ID",
-            userID: 0,
-            want:   false,
-        },
-        {
-            name:   "Non-existent ID",
-            userID: 2,
-            want:   false,
-        },
-    }
+	tests := []struct {
+		name   string
+		userID int
+		want   bool
+	}{
+		{
+			name:   "Valid ID",
+			userID: 1,
+			want:   true,
+		},
+		{
+			name:   "Zero ID",
+			userID: 0,
+			want:   false,
+		},
+		{
+			name:   "Non-existent ID",
+			userID: 2,
+			want:   false,
+		},
+	}
 
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            db := newTestDB(t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db := newTestDB(t)
 
-            m := UserModel{db}
+			m := UserModelWithPsql{db}
 
-            exists, err := m.Exist(tt.userID)
+			exists, err := m.Exist(tt.userID)
 
-            assert.Equal(t, exists, tt.want)
-            assert.NilError(t, err)
-        })
-    }
+			assert.Equal(t, exists, tt.want)
+			assert.NilError(t, err)
+		})
+	}
 }

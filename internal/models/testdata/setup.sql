@@ -3,31 +3,29 @@ DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS sessions;
 
 
-CREATE TABLE snippets (
-    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(100) NOT NULL,
-    content TEXT NOT NULL,
-    created DATETIME NOT NULL,
-    expires DATETIME NOT NULL,
-	user_id int not null,
-    visibility_level int NOT NULL DEFAULT 0,
-    FULLTEXT INDEX ft_snippets_title_content (title, content)
-);
-
-create table sessions (
-	token char(43) primary key,
-	data BLOB not null,
-	expiry timestamp(6) not null
-);
-
-
 CREATE TABLE users (
-    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     hashed_password CHAR(60) NOT NULL,
-    created DATETIME NOT NULL,
-    avatar_url varchar(255) NOT NULL
+    created TIMESTAMP NOT NULL,
+    avatar_url VARCHAR(255) NOT NULL DEFAULT '/static/img/avatars/penguin.png'
+);
+
+CREATE TABLE sessions (
+    token CHAR(43) PRIMARY KEY,
+    data BYTEA NOT NULL,
+    expiry TIMESTAMP(6) NOT NULL
+);
+
+CREATE TABLE snippets (
+    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    created TIMESTAMP NOT NULL,
+    expires TIMESTAMP NOT NULL,
+    user_id INTEGER NOT NULL,
+    visibility_level INTEGER NOT NULL DEFAULT 0
 );
 
 ALTER TABLE users ADD CONSTRAINT users_uc_email UNIQUE (email);

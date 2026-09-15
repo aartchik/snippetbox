@@ -19,7 +19,7 @@ COPY --from=builder /app/server .
 COPY --from=builder /app/tls ./tls
 COPY --from=builder /app/ui ./ui
 
-RUN chown -R appuser:appgroup /app 
+RUN mkdir -p /app/upload/avatars && chown -R appuser:appgroup /app
 
 USER appuser 
 

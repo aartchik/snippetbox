@@ -246,7 +246,8 @@ func (app *application) uploadAvatar(w http.ResponseWriter, r *http.Request) {
 
 	file, _, err := r.FormFile("avatar")
 	if err != nil {
-		http.Error(w, "Invalid file", http.StatusBadRequest)
+		app.sessionManager.Put(r.Context(), "flash", "Choose a JPG or PNG before saving your avatar.")
+		http.Redirect(w, r, "/account/view", http.StatusSeeOther)
 		return
 	}
 	defer file.Close()

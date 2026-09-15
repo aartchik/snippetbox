@@ -1,15 +1,15 @@
 package models
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"math/rand"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
-	"math/rand"
 
-	"github.com/go-sql-driver/mysql"
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,7 +19,6 @@ type UserModelInterface interface {
 	Exist(id int) (bool, error)
 	ReturnCorrectPassword(password string, user_id int) (bool, error)
 	ChangePassword(password string, user_id int) error
-	SamePassword(new_password, confirm_password string) bool
 	ReturnData(id int) (*User, error)
 	InsertPhoto(id int, avatar_URL string) error
 }
@@ -33,18 +32,18 @@ type User struct {
 	AvatarURL      string
 }
 
-type UserModel struct {
+type UserModelWithPsql struct {
 	DB *sql.DB
 }
 
-func  randomAvatar() (string, error) {
+func randomAvatar() (string, error) {
 	dir := "ui/static/img/avatars"
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		return "/static/img/avatars/penguin.png", err
 	}
 
-	var images[] string
+	var images []string
 
 	for _, f := range files {
 		fullPath := filepath.Join("/static/img/avatars", f.Name())
@@ -54,7 +53,7 @@ func  randomAvatar() (string, error) {
 	return images[rand.Intn(len(images))], nil
 }
 
-func (m *UserModel) Insert(name, email, password string) error {
+func (m *UserModelWithPsql) Insert(name, email, password string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return err
@@ -63,25 +62,25 @@ func (m *UserModel) Insert(name, email, password string) error {
 	if err != nil {
 		return err
 	}
-	stmt := `INSERT into users(name, email, hashed_password, created, avatar_url) values (?, ?, ?, NOW(), ?)`
-
-	_, err = m.DB.Exec(stmt, name, email, hash, defaultPhoto)
+	stmt := `INSERT into users(name, email, hashed_password, created, avatar_url) values ($1, $2, $3, NOW(), $4)`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err = m.DB.ExecContext(ctx, stmt, name, email, hash, defaultPhoto)
 	if err != nil {
-		var mySQLError *mysql.MySQLError
-		if errors.As(err, &mySQLError) {
-			if mySQLError.Number == 1062 && strings.Contains(mySQLError.Message, "users_uc_email") {
-				return ErrDuplicateEmail
-			}
+		var pgError *pq.Error
+		if errors.As(err, &pgError) && pgError.Code == "23505" && pgError.Constraint == "users_uc_email" {
+			return ErrDuplicateEmail
 		}
 		return err
 	}
 	return nil
 }
 
-func (m *UserModel) InsertPhoto(id int, avatar_URL string) error {
-	stmt := "UPDATE users SET avatar_url=? WHERE id=?"
-
-	_, err := m.DB.Exec(stmt, avatar_URL, id)
+func (m *UserModelWithPsql) InsertPhoto(id int, avatar_URL string) error {
+	stmt := "UPDATE users SET avatar_url=$1 WHERE id=$2"
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := m.DB.ExecContext(ctx, stmt, avatar_URL, id)
 	if err != nil {
 		return err
 	}
@@ -89,30 +88,29 @@ func (m *UserModel) InsertPhoto(id int, avatar_URL string) error {
 	return nil
 }
 
-func (m *UserModel) ChangePassword(password string, user_id int) error {
+func (m *UserModelWithPsql) ChangePassword(password string, user_id int) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return err
 	}
 
-	stmt := `update users set hashed_password = ? where id = ?`
+	stmt := `update users set hashed_password = $1 where id = $2`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-	_, err = m.DB.Exec(stmt, hash, user_id)
+	_, err = m.DB.ExecContext(ctx, stmt, hash, user_id)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m *UserModel) SamePassword(new_password, confirm_password string) bool {
-	return new_password == confirm_password
-}
-
-func (m *UserModel) ReturnCorrectPassword(password string, user_id int) (bool, error) {
+func (m *UserModelWithPsql) ReturnCorrectPassword(password string, user_id int) (bool, error) {
 	var hash []byte
-	stmt := `select hashed_password from users where id = ?`
-
-	err := m.DB.QueryRow(stmt, user_id).Scan(&hash)
+	stmt := `select hashed_password from users where id = $1`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, stmt, user_id).Scan(&hash)
 	if err != nil {
 		return false, err
 	}
@@ -127,12 +125,14 @@ func (m *UserModel) ReturnCorrectPassword(password string, user_id int) (bool, e
 	return true, nil
 }
 
-func (m *UserModel) Authenticate(email, password string) (int, error) {
+func (m *UserModelWithPsql) Authenticate(email, password string) (int, error) {
 
 	var id int
 	var hash []byte
-	stmt := `select id, hashed_password from users where email = ?`
-	err := m.DB.QueryRow(stmt, email).Scan(&id, &hash)
+	stmt := `select id, hashed_password from users where email = $1`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, stmt, email).Scan(&id, &hash)
 	if err != nil {
 		if errors.Is(sql.ErrNoRows, err) {
 			return 0, ErrInvalidCredentials
@@ -153,17 +153,21 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 
 }
 
-func (m *UserModel) Exist(id int) (bool, error) {
+func (m *UserModelWithPsql) Exist(id int) (bool, error) {
 	var exists bool
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-	stmt := "select exists(select true from users where id = ?)"
-	err := m.DB.QueryRow(stmt, id).Scan(&exists)
+	stmt := "select exists(select true from users where id = $1)"
+	err := m.DB.QueryRowContext(ctx, stmt, id).Scan(&exists)
 	return exists, err
 }
 
-func (m *UserModel) ReturnData(id int) (*User, error) {
-	stmt := "select name, email, created, avatar_url from users where id = ?"
-	row := m.DB.QueryRow(stmt, id)
+func (m *UserModelWithPsql) ReturnData(id int) (*User, error) {
+	stmt := "select name, email, created, avatar_url from users where id = $1"
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	row := m.DB.QueryRowContext(ctx, stmt, id)
 	s := &User{}
 	err := row.Scan(&s.Name, &s.Email, &s.Created, &s.AvatarURL)
 	if err != nil {
