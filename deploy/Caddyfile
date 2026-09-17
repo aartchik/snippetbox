@@ -1,3 +1,7 @@
 {$DOMAIN} {
     reverse_proxy app:4000
 }
+
+food-ordering-aartchik.duckdns.org {
+    reverse_proxy food-ordering-api:8080
+}
