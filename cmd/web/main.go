@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"fmt"
 	"html/template"
 	"strings"
 
@@ -66,12 +67,12 @@ func openRedis(cfg *config) (*redis.Client, error) {
 func openDB(cfg *config) (*sql.DB, error) {
 	db, err := sql.Open("postgres", cfg.dsn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error: failed open postgres: %w", err)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := db.PingContext(ctx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error: failed ping db: %w", err)
 	}
 	return db, nil
 }
