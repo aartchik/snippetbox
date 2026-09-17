@@ -729,6 +729,10 @@ div.error {
     color: var(--color-text-muted);
 }
 
+.account-avatar-form__button[hidden] {
+    display: none;
+}
+
 table {
     width: 100%;
     border: 1px solid var(--color-border);

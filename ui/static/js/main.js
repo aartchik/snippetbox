@@ -34,16 +34,18 @@ if (themeToggle) {
 var avatarForm = document.querySelector("[data-avatar-form]");
 if (avatarForm) {
 	var avatarInput = avatarForm.querySelector('input[type="file"]');
-	var avatarButton = avatarForm.querySelector('button[type="submit"]');
+	var avatarButton = avatarForm.querySelector("[data-avatar-submit]");
 	var avatarHint = avatarForm.querySelector("[data-avatar-hint]");
 
 	function updateAvatarFormState() {
-		var hasFile = avatarInput && avatarInput.files && avatarInput.files.length > 0;
+		var file = avatarInput && avatarInput.files && avatarInput.files[0];
+		var hasFile = Boolean(file);
 		if (avatarButton) {
+			avatarButton.hidden = !hasFile;
 			avatarButton.disabled = !hasFile;
 		}
 		if (avatarHint) {
-			avatarHint.classList.toggle("is-error", !hasFile);
+			avatarHint.classList.remove("is-error");
 			avatarHint.textContent = hasFile ? "Ready to upload." : "Choose a JPG or PNG before saving.";
 		}
 	}
@@ -53,7 +55,8 @@ if (avatarForm) {
 	}
 
 	avatarForm.addEventListener("submit", function (event) {
-		if (!avatarInput || !avatarInput.files || avatarInput.files.length === 0) {
+		var file = avatarInput && avatarInput.files && avatarInput.files[0];
+		if (!file) {
 			event.preventDefault();
 			updateAvatarFormState();
 		}

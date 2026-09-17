@@ -6,7 +6,6 @@
             {{if .IsAuthenticated}}
                 <a href='/snippet/create'>New note</a>
             {{end}}
-            <a href='/about'>Notebook</a>
         </div>
         <div class='site-nav__group site-nav__group--end'>
             <button type='button' class='theme-toggle' data-theme-toggle aria-label='Toggle dark theme' aria-pressed='{{if eq .Theme "dark"}}true{{else}}false{{end}}'>{{if eq .Theme "dark"}}Light mode{{else}}Dark mode{{end}}</button>

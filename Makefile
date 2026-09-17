@@ -28,6 +28,8 @@ test:
 	go test ./...
 test-compose:
 	docker compose --profile test run --rm test
+test-e2e:
+	./scripts/test-e2e.sh
 
 migrate_up:
 	migrate -path migrations_v2 -database "$(POSTGRES_DSN)" up
