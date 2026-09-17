@@ -1,4 +1,4 @@
-FROM golang:latest AS builder
+FROM golang:1.25.6 AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,6 @@ WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup 
 
 COPY --from=builder /app/server .
-COPY --from=builder /app/tls ./tls
 COPY --from=builder /app/ui ./ui
 
 RUN mkdir -p /app/upload/avatars && chown -R appuser:appgroup /app
